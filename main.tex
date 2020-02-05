@@ -1,0 +1,73 @@
+\documentclass[12pt, twoside]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[a4paper,width=150mm,top=25mm,bottom=25mm,bindingoffset=6mm]{geometry}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{color}
+\usepackage{tikz}
+
+\usepackage{lipsum} 
+
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[RO,LE]{Thesis Title}
+\fancyfoot{}
+\fancyfoot[LE,RO]{\thepage}
+\fancyfoot[LO,CE]{Chapter \thechapter}
+\fancyfoot[CO,RE]{Author Name}
+
+\usepackage[backend=bibtex]{biblatex}  
+\addbibresource{references.bib}
+
+\title{Master Thesis}
+\author{Maxime Schoemans}
+\date{2019 - 2020}
+
+\begin{document}
+
+\input{cover}
+
+\chapter*{Abstract}
+Abstract goes here
+ 
+\chapter*{Dedication}
+To mum and dad
+ 
+\chapter*{Declaration}
+I declare that..
+ 
+\chapter*{Acknowledgements}
+I want to thank...
+ 
+\tableofcontents
+
+\chapter{Introduction}
+\input{chapters/introduction}
+ 
+\chapter{Chapter Two Title}
+\input{chapters/chapter02}
+ 
+\chapter{Chapter Three Title}
+\input{chapters/chapter03}
+ 
+\chapter{Chapter Four Title}
+\input{chapters/chapter04}
+ 
+\chapter{Conclusion}
+\input{chapters/conclusion}
+
+\appendix
+
+\chapter{Appendix Title}
+\input{appendices/appendix}
+
+\nocite{*}
+\printbibliography
+
+\end{document}
