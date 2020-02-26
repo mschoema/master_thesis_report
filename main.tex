@@ -7,6 +7,8 @@
 \usepackage{subcaption}
 \usepackage{color}
 \usepackage{tikz}
+\usepackage{tabularx}
+\usepackage{amsmath}
 
 \usepackage{lipsum} 
 
@@ -25,6 +27,8 @@
 \usepackage[backend=bibtex]{biblatex}  
 \addbibresource{references.bib}
 
+\newcommand{\note}[1]{\textcolor{red}{[#1]}}
+
 \title{Master Thesis}
 \author{Maxime Schoemans}
 \date{2019 - 2020}
@@ -33,33 +37,34 @@
 
 \input{cover}
 
+\chapter*{Résumé}
+\input{intro/resume}
+
 \chapter*{Abstract}
-Abstract goes here
+\input{intro/abstract}
  
-\chapter*{Dedication}
-To mum and dad
- 
-\chapter*{Declaration}
-I declare that..
- 
-\chapter*{Acknowledgements}
-I want to thank...
+\chapter*{Acknowledgments}
+\input{intro/acknowledgments}
  
 \tableofcontents
+
+\listoffigures
+
+\listoftables
 
 \chapter{Introduction}
 \input{chapters/introduction}
  
-\chapter{Chapter Two Title}
-\input{chapters/chapter02}
+\chapter{Theory}
+\input{chapters/theory}
  
-\chapter{Chapter Three Title}
-\input{chapters/chapter03}
+\chapter{Implementation}
+\input{chapters/implementation}
  
-\chapter{Chapter Four Title}
-\input{chapters/chapter04}
+\chapter{Use case}
+\input{chapters/usecase}
  
-\chapter{Conclusion}
+\chapter{Conclusion and future work}
 \input{chapters/conclusion}
 
 \appendix
@@ -69,5 +74,6 @@ I want to thank...
 
 \nocite{*}
 \printbibliography
+\note{Check copyright for ISO reference!}
 
 \end{document}

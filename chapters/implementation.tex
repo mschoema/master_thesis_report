@@ -1,0 +1,49 @@
+\section{MobilityDB}
+
+	\subsection{Representation of moving objects}
+
+	Explain the physical implementation
+
+	\subsection{Use of PostGIS functions and types}
+
+	Most (geometric) functions are not implemented again
+
+\section{Fixed-shape moving regions}
+
+Representation of moving regions in MobilityDB
+	
+	\subsection{Normalization of the input}
+
+	Remove colinear values, but take care of too large rotations
+
+	\subsection{Rotating bounding boxes}
+
+	Precomputation of bounding boxes for moving regions (without traversed area)
+
+\section{Operations}
+
+Implementation of the operations
+
+	\subsection{AtInstant}
+
+	Get transformation at instant (compute it using interpolation if needed)
+	Transform initial region using this transformation
+
+	\subsection{Interpolation}
+
+		\subsubsection{2D}
+
+		<Tx, Ty>, Theta
+		Compute directly, while taking care of edge cases.
+		Or using quaternions just like in 3d
+
+		\subsubsection{3D}
+
+		<Tx, Ty, Tz>, rotation matrix?
+		Linear interpolation for the translation
+		Quaternions for the rotation
+
+	\subsection{Traversed Area}
+
+	Traversed area
+		
