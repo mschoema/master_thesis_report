@@ -4,14 +4,28 @@ Currently, location data is everywhere: which phone, car or laptop does not come
 Smart thermostats produce streams of continuously changing temperature measurements; satellite imaging helps keep track of the evolution of forest boundaries, forest fires, glacier extends and more. 
 A lot of applications make use of this data, and it is thus crucial to be able to store and query this data efficiently. For this reason, Moving Object Databases are used to store these temporal or spatio-temporal data. These databases make use of the inherent structure of moving objects to save data more efficiently and implement specific operations on these data types.
 
-\section{Previous work and MobilityDB}
+\note{Talk about the heavy ongoing research in this domain, mostly for point data. Describe moving regions and their importance. Than say that this master thesis will try to extend the work done on moving regions, mainly for fixed-shape regions.}
 
-pass
+\section{Previous work}
+
+\note{Maybe more than the 2 subsection?}
+
+	\subsection{Moving object databases and MobilityDB}
+
+	\note{Talk about previous moving object databases and MobilityDB}
+
+	\subsection{Research on moving regions}
+
+	\note{Mostly the two research papers about moving regions}
 
 \section{Objective of the thesis}
 
 Temporal or spatio-temporal data exists in many types. It ranges from simple values evolving through time (ex. temperature) to positions or even regions moving through time. This master thesis expands on one type of moving object: a fixed-shape moving region. The first objective of this thesis is to describe the theoretical concepts needed to represent and use these moving regions in a moving object database. A second part revolves around implementing these concepts in MobilityDB and describing the practical challenges that appeared during this implementation.
 
+\note{Talk more about the long-term objective of creating a basis/structure for implementing moving regions in practice, starting with fixed-shape regions. First, adding moving region concepts to MobilityDB, then applying the algorithms from the paper or implementing new ones to apply the needed operations on these objects. Lastly test this implementation on a use case.}
+
 \section{Structure of the thesis}
 
 The structure of this master thesis is as follows. First, theoretical concepts are explained. The different types of moving objects are described and illustrated. The representation and operations of fixed-shape moving regions are then defined. Then, the practical implementation, and challenges thereof, are described. Lastly, a use case illustrates the usability of the resulting implementation. A summary, followed by possible future work concludes the thesis.
+
+\note{Will be adapted when the structure becomes clearer}

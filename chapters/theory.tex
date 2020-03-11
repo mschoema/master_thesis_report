@@ -165,7 +165,23 @@ Where \( v \) is a translation vector and \( \theta \) is an angle. This represe
 
 		\subsubsection{Interpolation}
 
-		Suppose that we know the position of a moving region at times \( t_i \) and \( t_{i+1} \) and that we want to know what the position of that region is in between these instants. Since we previously supposed that the respective points of different regions/polygons are known, a first possible interpolation method would be to linearly interpolate each respective vertex of the start and end polygon. An example of this can be seen below. \note{Add an example}
+		Suppose that we know the position of a moving region at times \( t_i \) and \( t_{i+1} \) and that we want to know what the position of that region is in between these instants. Since we previously supposed that the respective points of different regions/polygons are known, a first possible interpolation method would be to linearly interpolate each respective vertex of the start and end polygon. An example of this can be seen below. 
+		
+		\note{Add an example}
+		
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=0.9\textwidth]{vertices_linear_interpolation}
+			\caption{Example of a correct linear interpolation of vertices between two regions}
+			\label{fig:correct_vertices_interpol}
+		\end{figure}
+		
+		\begin{figure}[h]
+			\centering
+			\includegraphics[width=0.9\textwidth]{vertices_linear_interpolation_wrong}
+			\caption{Example of a wrong linear interpolation of vertices between two regions}
+			\label{fig:wrong_vertices_interpol}
+		\end{figure}
 
 		As we see on above example, this seems to work well when the region is only translating. However, when the moving region is also rotating, this interpolation method fails to maintain the fixed-shape aspect of the region, and produces regions that are deforming along the translation. This comes from the fact that this interpolation method assumes that the vertices of the region move freely and independently of each other. For fixed-shape moving region this is unfortunately not the case, so this interpolation method cannot be used when rotations are involved. \note{Add an example}
 
@@ -201,6 +217,7 @@ Where \( v \) is a translation vector and \( \theta \) is an angle. This represe
 		This method will give the correct interpolation of regions for transformations in 2d. However, in 3d, Euler angles are hard to interpolate with the same method. There is thus another technique that allows for the interpolation of rotations in both 2d and 3d in a similar manner. This technique uses \textit{quaternions}, and is described in section \note{link to section}.
 		
 		\subsubsection{TraversedArea}
+		\label{section:traversed_area}
 		
 		\note{Todo}
 		
@@ -224,7 +241,7 @@ Where \( v \) is a translation vector and \( \theta \) is an angle. This represe
 	
 		\subsubsection{Representing 3d rotations using Quaternions}
 		
-		Quaternions were first described by William Rowan Hamilton in 1843 \note{citation?} and are an extention to complex numbers. Quaternions are represented using in the following way.
+		Quaternions were first described by William Rowan Hamilton in 1843 \note{citation?} and are an extention to complex numbers. Quaternions are represented in the following way.
 		
 		\begin{equation}
 			q = a + bi + cj + dk, \; \text{with } a, b, c, d \in \mathbb{R} \\
