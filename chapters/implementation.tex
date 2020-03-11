@@ -1,8 +1,10 @@
 \section{MobilityDB}
 
+\note{Intro on mobilityDB}
+
 	\subsection{Representation of moving objects}
 
-	Explain the physical implementation
+	\note{Explain the physical implementation, see MobilityDBDemoSSTD19 paper}
 
 	\subsection{Use of PostGIS functions and types}
 
@@ -10,15 +12,115 @@
 
 \section{Fixed-shape moving regions}
 
-Representation of moving regions in MobilityDB
-	
-	\subsection{Normalization of the input}
+The implementation of fixed-shape moving regions uses the same sequence representation of temporal types that already exists in MobilityDB. The newly defined type is called \textit{tgeometry}, short for \textit{temporal geometry}, but this might change in case other types of regions are also added (ex. deforming regions). As said previously, the PostGIS type \textit{polygon} is used to represent a given region, to be able to use PostGIS as much as possible for geometric functions. 
 
-	Remove colinear values, but take care of too large rotations
+A tgeometry is thus defined by a sequence of input values, where each input value is a pair of both a time instant and a PostGIS polygon object. However, as said in the theory section, storing this sequence like that is not efficient at all, since we do not use that fact these regions have the same shape. To solve this, the representation using a sequence of transformations, described in the theory section, is used to store this sequence of temporal regions efficiently. The practical challenges of implementing moving regions are described in the following sections. 
+
+An important assumption on which most of the implemented algorithms rely is that the rotatin center of all moving regions is assumed to be their centroid. This means that when we want to store a transformation with respect to a region, we only need three values (in 2d) corresponding to the translation vector and the rotation angle. The centroid can be easily recomputed from the stored region, and we thus don't need to store it in each transformation vector. Another assumption that is made is the fact that the regions are made out of a large set of vertices, so that the storage space of a region is much larger than that of a transformation. If this assumtion was not verified, for example if the regions handled were simple triangles, it might be possible to create more efficient algorithms for some operations, but this is not discussed in this master thesis.
+	
+	\subsection{Input and computation of transformation vector}
+	
+	The input of a moving region resembles the inputs of other moving objects in MobilityDB and depends on the duration of their temporal value. Four possible durations exist and the input for each of the is described below.
+	
+		\subsubsection{Instant}
+		
+		The input of a tgeometry of instant duration is just a pair of both a time instant and a region value. The moving region is then stored as such, since there is no redundancy when storing a single instant. No checks have to be made either, since the only requirement is that the region is of fixed shape, wich is obvious when we have a single instant. An object of this type is denoted \textit{tgeometryinst}.
+			
+		\subsubsection{Instant Set}
+		
+		The input is an array of tgeometryinst and the resulting type is denoted \textit{tgeometryi}. Here, the first thing to check is the fact that every instant must have a region of the same shape. For each instant after the first one, we compare the region value with the initial region stored in the first instant. To compare two regions, the transformation from the first to the second one is computed using the technique described in the theory section \note{ref to section}. Then the initial region is transformed using the previously computed transformation. Lastly every vertex of the polygon representing the region is compared to the corresponding vertex on the second polygon. If the position of two corresponding vertices differ too much, then the regions are considered of different shape and the input is rejected. If all corresponding vertices are sufficiently similar, then the regions are considered fixed-shape and the next instant is checked.
+			
+		During these checks, the transformations of the regions of each instant with respect to the inital instant are computed. If all the checks pass, these transformations are kept and used to store the moving region in a more efficient manner. The first instant stores the initial region, while subsequent only store the needed transformations. This allows to store an instant set using much less space, while still being efficient to process. If we want to output the regions initially recieved, all that is needed is to use copy the inital region and apply the stored transformations to it.  
+		
+		\note{visualization of the difference}
+			
+		\subsubsection{Sequence}
+		
+		A moving region of sequence duration is essentially the same as an instant set, except that we assume that the position of the region can be computed at intermediate time steps using interpolation. This type of object is called a \textit{tgeometryseq}. The input, checks and storage of a tgeometryseq is the same as for a tgeometryi. The only difference occurs during the normalization of the input and the computation of the bounding boxes. This comes from the fact that we assume that the region still exists between two input values and all interpolated values need to be correct and inside the precomputed bounding box. These two particular cases are explained in further sections in more detail.
+		
+		\note{visualization of the difference}
+		
+		\subsubsection{Sequence Set}
+		
+		Just like an instant set is an array of instants, a sequence set is an array of sequences. Since we assume that the input sequences have already passes the fixed-shape region checks, we only need to make sure that subsequent sequences also correspond to the same fixed-shape region. If this is the case for all sequences, then the input is accepted, else the input is rejected. For sequence sets, two possible storage ideas are possible, both being more efficient than the naive idea of storing all region values. The difference between both ideas is described, illustrated and discussed below. The arrows point to the region to which the transformation has to be applied to result in the correct output.
+		
+		\note{visualization of both ideas}
+		
+		The first idea is to store every sequence in the set as it is recieved, which means that every sequence will store an 'inital region' in their first instant, and transformations relative to this first region in their subsequent instants. This allows for an easy extraction of a sequence from the set, but requires more storage, since the same fixed-shape region is still stored multiple times.
+		
+		The second idea is to keep only the first sequence as it is recieved, and to transform all subsequent sequences to only contain transformations relative to the 'initial region' (the region contained in the first instant of the first sequence). This alternative requires less storage space than the first, since every region except the very first one is replaced by a transformation. This storage idea also simplifies the normalization checks and the required modifications of the sequences during normalization. A downside of this approach is that it is computationally less efficient than the previous one when outoutting a sequence from the set or when splitting the set in multiple parts. An example of the required changes when splitting a sequence set in two is shown below. \note{visualize splitting of sequences}
+		
+		While both alternatives are technically feasible, the first one was chosen because it was easier to implement and because it seemed to be the most computationally efficient solution. \note{practical test of the difference?}
+
+	\subsection{Normalization of the representation of moving regions}
+
+	Normalizing the representation of a moving object modifies the representation of the object to a unique representation. Every sequence or sequence set that represents the same moving object will thus have the same representation. This normalization is mostly used when creating a new moving object from an input or when joining multiple objects together (ex. when combining two sequences of the same region). During normalization, redundant instants that could be recomputed by interpolating between two other instants are removed. For instants and instant sets, there is no normalization process, since we do not assume any interpolation process between instants, and thus we cannot have redundant instants. A simple example with a moving point is shown below to visualize the concept of normalization.
+	
+	\note{Example of normalization with a moving point}
+	
+	Normalizing the representation of moving objects is important in multiple aspects. First, removing redundant instants in sequences and sequence sets makes the stored objects smaller. Secondly, having a unique representation for every moving objects also allows to compare them for equality much more easily than if multiple representations of the same moving object are allowed.
+	
+	As said previously, normalizing happens only in sequences and sequence sets. Normalization in sequence set can be seen as joining two sequences when the last instant of the first sequence is identical to the first instant of the second one, and then normalizing the resulting sequence. In the following discussion, we will thus only focus on normalizing a single sequence.
+	
+	To explain the normalization process of a moving region of sequence duration (tgeometryseq), we will first describe the normalization process of a moving point of sequence duration (tpointseq), since both processes are analogous. The interpolation technique used for moving points is a simple linear interpolation. In a sequence of points defined at increasing time instants (tpointseq), when three subsequent points are collinear and the ratio of their distance in the time dimension is the same as the ratio of their distance in 2d (or 3d) space, then the middle point is considered redundant, since it could easily be recomputed using interpolation. This situation can be seen in \note{ref to previous figure showing the normalization of a moving point}.
+	
+	Normalizing a moving region is done in a similar manner. The main difference here is that we do not check for collinearity of points, but we check for collinearity of transformation vectors. Three (2d) transformation vectors are collinear if their translation vectors are collinear in 2d space, and their rotation angles are also collinear with the same ratio as the translation vectors. To check collinearity of the rotation angles we have to handle edge cases, since the angles are always between $-\pi$ and $\pi$. An example of collinear regions can be seen below.
+	
+	\note{Example of collinear regions}
+	
+	When handling moving points, collinear points are considered redundant, since they can always be retrieved using interpolation. On the other hand, when handling moving regions, all collinear regions are not necessarely redundant. Indeed, since the interpolation method always interpolates two regions using the smallest angle between them, removing a collinear region could cause the interpolation to have a different direction of rotation than expected. This issue can be seen below.
+	
+	\note{Figure showing errors when removing collinear regions with high rotations}
+	
+	This issue only comes up when the sum of the angles between three subsequent transformation vectors is larger than $\pi$. If this sum of angles is smaller than $\pi$, the collinear region is redundant, and can be recomputed using interpolation. In this case the region can simply be removed. However, if this is not the case, then the collinear region is not completely redundant, since it gives an information about the direction of rotation that would not be present if the region was simply removed. Leaving the region present is also not a possiblity, since this could result in multiple moving regions being identical, while having a different representation.
+	
+	\note{Show two possible representations with for the same moving objects}
+	
+	To solve this issue multiple ideas are possible. A first idea is to add the direction of rotation in the transformation vector. Since the interpolation of regions is done between two adjacent instants, this extra value would be defined with respect to the previous instant in the sequence. This contradicts with the other values in the stored transformation vector, since previously the transformation vectors were define with respect to the intial (first) region. This solution is thus feasible, but the values need to be handled with care.
+	
+	Another solution is to add a \textit{dummy} region that woud be the same for all objects representing the same moving region. This dummy region would serve as a kind of guide for the interpolation to preserve the correct direction of rotation. Altough this technique would not always reduce the storage space, it does take care of the unique representation of the moving regions, which is the main concern. It it however possible that in some cases a dummy region can take the place of two region instead of just one, and thus still reduce slightly the storage space. An example of this can be seen below.
+	
+	\note{Example of dummy region replacing two 'redundant' regions}
+	
+	This dummy region has to be well-defined, so that every possible input representing the same moving region could be transformed in a unique representation. The definition should also try to minimize the amount of dummy regions needed in this unique representation. We chose to define the dummy region/transformation \note{make sure the use of region vs transformation is either consistent, or well-explained at the start} in the following way.
+	
+	When three collinear regions have a combined angle of larger than $\pi$, the middle region will be replaced by a region which has a rotation of $\pi - \epsilon$ with respect to the first region, where $\epsilon$ will be the same for all objects and has to be chosen so that the direction of rotation stay correct regardless of any rounding errors, while also being as small as possible. (probably take epsilon a bit larger, maybe 10x, than system error)
+	
+	This (informal) definition produces a minimal amount of dummy regions, while still being able to recreate the initial movement of the region correctly. This method is also produces unique representations and is thus a good way to normalize moving regions.
+	
+	Theoretically, since the transformation that is stored for this dummy region is partially redundant, we could replace it with a single value representing the direction of rotation, or the intermediate angle. This is in principle feasible to reduce storage space even more, but that would mean that we need to handle a third kind of object, which is maybe not the best idea when we want to implement clean code. 
 
 	\subsection{Rotating bounding boxes}
-
-	Precomputation of bounding boxes for moving regions (without traversed area)
+	
+	Another implementation issue that arises when handling moving regions instead of points is the precomputation of the bounding boxes of the different moving region objects. In MobilityDB, bounding boxes for objects of instant set, sequence and sequence set durations are precomputed and stored with the object. 
+	
+	When computing the bounding box of a moving region of instant set duration, the same method as for the other moving objects can be applied, i.e.: the bounding box of each instant is computed (for regions, this is done using PostGIS geometric functions), and the resulting bounding box is just the smallest box containing all the bounding boxes of the instants. Since sequences of regions already have their bounding boxes precomputed, the same technique can be applied to moving regions of sequence set duration: the resulting bounding box is the smallest box containing all the bounding boxes of the sequences.
+	
+	\note{Example of bounding box of instant set}
+	
+	The last case that needs to be handled is the computation of the bounding box of a moving region of sequence duration. Applying the same method as for regions of instant set duration does not work anymore, since the vertices of the regions do not move linearly when the region is rotating. This means that some vertices will go outside the smallest bounding box containing both the start and end regions. A trivial example is when a square rotates 90 degrees without translating. The bounding box containing its start and end vertices will just be the square itself, but the corners of the square clearly exited this bounding box during the rotation. 
+	
+	A more advanced example can be seen below.
+	
+	\note{Example of error when computing the naive bounding box}
+	
+	To solve this issue, we imagined two possible alternatives. First of all, if the traversed area (see \ref{section:traversed_area}) of the moving is known, we can just take the bounding box of this area, which will be indeed the minimal bounding box containing the moving region completely. However, since computing this traversed area is a computationally heavy operation, we propose another method that computed a bounding box in a more efficient way. This solution produces a correct but non-optimal bounding box. The bounding box is correct, because the region will never exit this box during its movement, but non-optimal, because it will usually not be the smalles bounding box that can be found. These assumptions are still sufficient for the bounding box to be used for indexing and/or sorting purposes, so this solution has been implemented in MobilityDB.
+	
+	To compute this bounding box for sequences, a similar procedure as for instance sets is used. The only difference is that when computing the bounding boxes of the instants, a \textit{rotating bounding box} algorithm is used instead of the PostGIS bounding box functions. This rotating bounding box algorithm works as follows:
+	
+	\begin{enumerate}
+		\item Find the vertex furthest from the rotation center. In our case the rotation center is the centroid of the polygon representing the region. This step can be done with a linear seach through the vertices.
+		\item Compute the distance $d_{max}$ between the rotation center and this vertex.
+		\item Create a square of side $2*d_{max}$, centered around the rotation center.
+		\item Return this square as the rotating bounding box.
+		\item (optional) Also return $d_{max}$ to be used for the following instants, since this value does not change if the region and the rotation center of the region stay the same. If this is done, we can skip step 1 and 2 when computing the next rotating bounding boxes.
+	\end{enumerate}
+	
+	\note{Maybe visualization of the algorithm}
+	
+	This algorithm will return a bounding box which completely contains the given region, independently of any rotation applied to it on its rotation center. After computing the bounding boxes of all the instants, the resulting bounding box will simply be the smallest box containing all the bounding boxes of the instants.
+	
+	This solution was used to compute bounding boxes of moving regions of sequence duration before the traversed area algorithm was implemented.
 
 \section{Operations}
 
@@ -46,4 +148,14 @@ Implementation of the operations
 	\subsection{Traversed Area}
 
 	Traversed area
-		
+
+\section{Discussion}
+
+\begin{itemize}
+	\item Measurements of moving regions? $\rightarrow$ maybe input as transformation could be useful
+\end{itemize}
+
+\section{Stepwise interpolation of deforming moving regions}
+
+Explain the implementation requirements (stepwise interpolation of floats are also needed, implementation needs to be complete with respect to all operations)
+Practical use for cadastre (maybe in use case, idk where to put this section)
