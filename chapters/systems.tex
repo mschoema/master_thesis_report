@@ -2,7 +2,7 @@
 
 PostgreSQL \note{link to manual} is an open-source object-relational database management [ORDBMS] system based on Postgres, and was developed at the \textit{University of California at  Berkeley Computer Science Department} in 1996.
 
-The name of the system reflects its support for most SQL standards, but the system also offers many advanced features, such as complex queries, foreign keys, triggers, multiversion concurrency control and more. 
+The name of the system reflects its support for most SQL standards, but the system also offers many advanced features, such as complex queries, foreign keys, triggers, multi-version concurrency control and more. 
 
 PostgreSQL is also highly extensible, which allows users to define new data types, functions, indexing methods and more, without having to modify the core database engines. This feature allows new extensions to be added, capable of handling user-defined data types, while keeping the full power of a traditional database management system [DBMS].
 
@@ -66,7 +66,7 @@ A temporal sequence is defined just as a a temporal instant set, except that the
 
 Depending on the base type of the object, two interpolation methods are possible, stepwise/discrete or linear/continuous. The base types bool, text, and integer are forced to use a discrpete interpolation method, whereas the base types float, geometry and geography can use either one depending on the use case.
 
-For example, when using a \textit{tint} to represent the number of people in a bus, if a new temporal instant is added every time someone steps in or out of the bus, we can get the number of people in the bus at any time during its trip, by simply looking at the latest defined value before that instant. This is an example of a sepwise interpolation for temporal integers.
+For example, when using a \textit{tint} to represent the number of people in a bus, if a new temporal instant is added every time someone steps in or out of the bus, we can get the number of people in the bus at any time during its trip, by simply looking at the latest defined value before that instant. This is an example of a stepwise interpolation for temporal integers.
 
 An example of a linear interpolation could be the case of a room thermometer. If we measure the temperature sufficiently often, we can assume that the temperature between two measures can be obtained by interpolating linearly between these two values. These measurements will thus be stored in a temporal sequence with float base type, and intermediate values will be retrieved using a linear interpolation method.
 
@@ -228,7 +228,7 @@ These functions and operators can be grouped into the following categories:
 
     \item Distance Operators
 
-        Computes the distance between two temporal points as a tfloat ('\(<->\)') or the smallest distance between two temporal points as a float ('\(|=|\)'). Since the distance function quadratic, the distance operator uses a linear approximation of the usual distance functions, to ba able to return a tfloat.
+        Computes the distance between two temporal points as a tfloat ('\(<->\)') or the smallest distance between two temporal points as a float ('\(|=|\)'). Since the distance function quadratic, the distance operator uses a linear approximation of the usual distance functions, to be able to return a tfloat.
 
     \item Spatial Relationships for Temporal Points
 
