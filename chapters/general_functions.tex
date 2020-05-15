@@ -1,2 +1,289 @@
-\section{Implementation of MobilityDB Functions}
+%!TEX root = ../main.tex
 
+\newpage
+
+\section{Implementation of MobilityDB Functions}
+\label{section:general_functions}
+
+The main focus of this master thesis is extending MobilityDB by adding a new type to represent moving regions and by implementing a set of functions to input, manipulate and output this new type. In Section \ref{section:mobilitydb_functions}, different types of functions and operators are presented, and most of these functions are polymorphic, meaning that they accept different input types and that their output depends on these input types. The next section lists most of these functions, explains how they are used to manipulate the tgeometry type, and the implementation of the most difficult functions are also described.
+
+\subsection{Type Declaration Functions and Parameters}
+\label{section:type_declaration}
+
+When defining a new SQL type, 2 functions have to be declared, and a few other functions and parameters are optional. The two required functions are \textit{input} and \textit{output}, converting a \textit{cstring} (C string type) to the newly declared type and back. The optional functions and parameters are used to declare the internal storage length of the type, the storage alignment in bytes, input/out to and from byte format, type modifier specification, and more.
+
+As explained previously, two new types have been added to MobilityDB: \textit{rtransform} and \textit{tgeometry}. Four variations of the tgeometry type (\textit{tgeometryinst}, \textit{tgeometryi}, \textit{tgeometryseq} and \textit{tgeometrys}) are also present at the C-level, but only these two top-level types are exposed at the SQL level. Table \ref{table:rtransform_type_declaration} lists the declared parameters and functions for the rtransform type, and Table \ref{table:tgeometry_type_declaration} described the tgeometry type.
+
+\begin{table}[h!]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|X|}
+    \hline
+    \textbf{Parameter}  & \textbf{Value}        & \textbf{Description} \\ 
+    \hline
+    internal length     & 24                    & Internal storage length in bytes. \\
+    \hline
+    alignment           & double                & Storage alignment of the type. \\
+    \hline
+    \multicolumn{2}{|l|}{\textbf{Function}}     & \textbf{Description} \\ 
+    \hline
+    \multicolumn{2}{|l|}{input}                 & Conversion from \textit{cstring} to \textit{rtransform} type \\
+    \hline
+    \multicolumn{2}{|l|}{output}                & Conversion from \textit{rtransform} to \textit{cstring} type \\
+    \hline
+    \multicolumn{2}{|l|}{receive}               & Conversion from \textit{bytea} to \textit{rtransform} type \\
+    \hline
+    \multicolumn{2}{|l|}{send}                  & Conversion from \textit{rtransform} to \textit{bytea} type \\
+    \hline
+    \end{tabularx}
+    \caption{Declared parameters and functions for the \textit{rtransform} type}
+    \label{table:rtransform_type_declaration}
+\end{table}
+
+The rtransform type stores three double (8-byte) values, two for the translation and one for the rotation, and has thus a fixed length of 24 bytes. Since values of this type will never be store alone, but always as part of a tgeometry value, the storage strategy does not need to be declared. During the input from a string, we make sure that the value for the rotation is between $-\pi$ and $\pi$. The output as a string is formatted as follows:
+
+\[
+    \text{"RTransform(}\theta,\ v_x,\ v_y{)"}
+\]
+
+, where all three values are written with up to 15 decimal digits. The binary representation is simply a list of three doubles in the same order as in the string representation.
+
+\begin{table}[h!]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|X|}
+    \hline
+    \textbf{Parameter}  & \textbf{Value}        & \textbf{Description} \\ 
+    \hline
+    internal length     & variable              & Internal storage length of the type in bytes. \\
+    \hline
+    storage             & extended              & Storage strategy of the type. \\
+    \hline
+    alignment           & double                & Storage alignment of the type. \\
+    \hline
+    \multicolumn{2}{|l|}{\textbf{Function}}     & \textbf{Description} \\ 
+    \hline
+    \multicolumn{2}{|l|}{input}                 & Conversion from \textit{cstring} to \textit{tgeometry} type \\
+    \hline
+    \multicolumn{2}{|l|}{output}                & Conversion from \textit{tgeometry} to \textit{cstring} type \\
+    \hline
+    \multicolumn{2}{|l|}{receive}               & Conversion from \textit{bytea} to \textit{tgeometry} type \\
+    \hline
+    \multicolumn{2}{|l|}{send}                  & Conversion from \textit{tgeometry} to \textit{bytea} type \\
+    \hline
+    \end{tabularx}
+    \caption{Declared parameters and functions for the \textit{tgeometry} type}
+    \label{table:tgeometry_type_declaration}
+\end{table}
+
+The tgeometry type contains PostGIS polygons (which are of variable length) and can have an arbitrary number of defined instants, so it must be defined as variable-length. Since the type is variable in length, the \textit{plain} storage strategy, storing the values in-line without compression, cannot be used. The \textit{extended} strategy is thus used to compress large values, and even move them out of the main table if the value is still too large.
+
+The string representation of the the tgeometry types depends on the duration of the value as described in Section \ref{section:mobilitydb} (instant, instant set, ...), and represents the values of the instants as PostGIS polygon types. Section \note{ref to section} discussed the string representation of the tgeometry type in more detail. These conversion functions from and to a string are defined together with the conversion functions from and to a byte list.
+
+\subsection{Constructors}
+\label{section:constructors}
+
+Four different constructors exist for tgeometry types, one for each duration.
+
+\begin{table}[h!]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|X|}
+    \hline
+    \textbf{Function}   & \textbf{Signature} \\ 
+    \hline
+    tgeometryinst       & geometry(Polygon) x timestamptz $\rightarrow$ tgeometry(Instant) \\
+    \hline
+    tgeometryi          & array tgeometry(Instant) $\rightarrow$ tgeometry(Instant Set) \\
+    \hline
+    tgeometryseq        & array tgeometry(Instant) x lower inclusive x upper inclusive x linear $\rightarrow$ tgeometry(Sequence) \\
+    \hline
+    tgeometrys          & array tgeometry(Sequence) $\rightarrow$ tgeometry(Sequence Set) \\
+    \hline
+    \end{tabularx}
+    \caption{Constructor functions}
+    \label{table:constructor_funcs}
+\end{table}
+
+When creating a tgeometryinst, the input geometry is checked to make sure that it is a 2D polygon. Both the instant set and sequence constructors receive and array of tgeometryinst as input, while the sequence set constructor requires an array of tgeometryseq. Different checks are done to make sure that this input array corresponds to a correct temporal geometry.
+
+First of all, when creating an instance set or a sequence, the usual timestamp checks are done, meaning that the instants must have strictly increasing timestamps. Lastly, the regions are compared with one another, to make sure that they have the same shape.
+
+This comparison between regions is done in two steps. A first quick check compares the number of inner rings of the polygons and if both polygons have the same number of rings, it compares the number of points on each ring. If two polygons are able to pass this check, the transformation between the two polygons is computed from the first two points of the outer ring of both polygons, and the transformation is then applied to one of the polygons. Only polygons where the corresponding points are close enough to each other (their distance is smaller than a fixed $\epsilon$) after the transformation are considered fixed-shape. Figure \note{ref to figure} shows examples of polygons that fail the first test (\note{color}), pass the first test, but fail the second (\note{color}), or pass all tests because they are indeed fixed-shape (\note{color}).
+
+\note{Add figure: 3 columns of 2 polygons on top of each other. First column: polygons with different number of rings or points, second: polygons with different shape, third: two identical polygons at different positions}
+
+If all polygons are indeed fixed-shape, the input array is accepted and saved using the representation described in Section \ref{section:internal_repr_i} and \ref{section:internal_repr_seq}.
+
+The sequence constructor has three additional parameters. The first two specify if the start and end instant are inclusive or not and by default both are considered inclusive. The last parameter specifies the interpolation strategy for the sequence, either linear or stepwise. The sequence set constructor has checks similar to the two previous ones, but since the input durations are already assumed to be sequences, only the comparisons between distinct sequences has to be done. During these comparisons, checks are done to assure continuously increasing timestamps, and fixed-shape polygons across the whole sequence set.
+
+Every tgeometry instance of either instant set, sequence or sequence set duration also computes and saves a bounding box used for optimization purposes. Section \ref{section:bbox_funcs} lists a few bounding-box specific functions, and Section \ref{section:bbox} explains how these bounding boxes can be computed. Temporal points of sequence and sequence set duration also save a \textit{trajectory}, which is also used to optimize a few functions. The polygon equivalent of this trajectory is the \textit{traverser area} of the polygon. The computation of the traversed areas of a moving region is discussed in Section \ref{section:traversed_area}.
+
+Lastly, the arrays of instants and sequences stored are normalize during the input process to allow for efficient comparisons later on. This normalization is necessary to ensure that identical paths have the same internal representation. This topic is further discussed in Section \ref{section:normalization}.
+
+\subsection{Transformation Functions}
+\label{section:transformation_funcs}
+
+Table \ref{table:transformation_funcs} lists the transformations functions that can be applied to tgeometry objects. The first four transformation functions are used to change the duration of a temporal geometry. These transformations are only possible when the correct number of instants and/or sequences are present in the input tgeometry. For example, for a temporal geometry to be transformed into a tgeometryinst, it must contain a single instant. Transforming into an instant set from a sequence set is only possible if every sequence in the set contains a single instant. The six possible transformations are listed below.
+
+\begin{itemize}
+    \item Instant $'\mathcal{R}@t'$ $\leftrightarrow$ Instant Set $'\{\mathcal{R}@t\}'$
+    \item Instant $'\mathcal{R}@t'$ $\leftrightarrow$ Sequence $'[\mathcal{R}@t]'$
+    \item Instant $'\mathcal{R}@t'$ $\leftrightarrow$ Sequence Set $'\{[\mathcal{R}@t]\}'$
+    \item Instant Set $'\{\mathcal{R}@t\}'$ $\leftrightarrow$ Sequence $'[\mathcal{R}@t]'$
+    \item Instant Set $'\{\mathcal{R}_0@t_0,\ ...,\ \mathcal{R}_n@t_n\}'$ $\leftrightarrow$ Sequence Set $'\{[\mathcal{R}_0@t_0],\ ...,\ [\mathcal{R}_n@t_n]\}'$
+    \item Sequence $'[\mathcal{R}_0@t_0,\ ...,\ \mathcal{R}_n@t_n]'$ $\leftrightarrow$ Sequence Set $'\{[\mathcal{R}_0@t_0,\ ...,\ \mathcal{R}_n@t_n]\}'$
+\end{itemize}
+
+Next to changing their duration, temporal geometries can also be transformed by appending a new instant to the end or my merging two temporal geometries together, during which similar checks as in the constructors are applied.
+
+\begin{table}[h!]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|X|}
+    \hline
+    \textbf{Function}   & \textbf{Signature} \\ 
+    \hline
+    tgeometryinst       & tgeometry $\rightarrow$ tgeometry(Instant) \\
+    \hline
+    tgeometryi          & tgeometry $\rightarrow$ tgeometry(Instant Set) \\
+    \hline
+    tgeometryseq        & tgeometry $\rightarrow$ tgeometry(Sequence) \\
+    \hline
+    tgeometrys          & tgeometry $\rightarrow$ tgeometry(Sequence Set) \\
+    \hline
+    \hline
+    appendInstant       & tgeometry x tgeometry(Instant) $\rightarrow$ tgeometry \\
+    \hline
+    merge               & tgeometry x tgeometry $\rightarrow$ tgeometry \\
+    \hline
+    merge               & array tgeometry $\rightarrow$ tgeometry \\
+    \hline
+    \end{tabularx}
+    \caption{Transformation functions}
+    \label{table:transformation_funcs}
+\end{table}
+
+\subsection{Accessors}
+\label{section:accessors}
+
+A large list of accessor functions exist to retrieve the duration, memory size, individual values, instants, timestamps and more. (Table \ref{table:accessor_funcs})
+
+\begin{table}[h!]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|X|}
+    \hline
+    \textbf{Function}   & \textbf{Signature} \\ 
+    \hline
+    duration            & tgeometry $\rightarrow$ text\\
+    \hline
+    interpolation       & tgeometry $\rightarrow$ text\\
+    \hline
+    memSize             & tgeometry $\rightarrow$ integer \\
+    \hline
+    getValue            & tgeometry(Instant) $\rightarrow$ geometry(Polygon) \\
+    \hline
+    startValue          & tgeometry $\rightarrow$ geometry(Polygon) \\
+    \hline
+    endValue            & tgeometry $\rightarrow$ geometry(Polygon) \\
+    \hline
+    getTimestamp        & tgeometry(Instant) $\rightarrow$ timestamptz \\
+    \hline
+    getTime             & tgeometry $\rightarrow$ periodset \\
+    \hline
+    timespan            & tgeometry $\rightarrow$ interval \\
+    \hline
+    shift               & tgeometry $\rightarrow$ tgeometry \\
+    \hline
+    num*                & tgeometry $\rightarrow$ integer \\
+    \hline
+    start*              & tgeometry $\rightarrow$ * \\
+    \hline
+    end*                & tgeometry $\rightarrow$ * \\
+    \hline
+    *N                  & tgeometry x integer $\rightarrow$ *\\
+    \hline
+    *s                  & tgeometry $\rightarrow$ array *\\
+    \hline
+    \end{tabularx}
+    \caption{Accessor functions}
+    \label{table:accessor_funcs}
+\end{table}
+
+\textit{Duration} returns one of $\{$\textit{Instant}, \textit{Instant Set}, \textit{Sequence}, \textit{Sequence Set}$\}$, \textit{interval} returns either \textit{Discrete} for instants and instant set or one of $\{$\textit{Linear}, \textit{Stepwise}$\}$ for sequences and sequence sets, and \textit{memsize} returns the internal memory size in bytes.
+
+Other accessor functions are defined to retrieve individual values, timestamps or sequences from the temporal geometry. In Table \ref{table:accessor_funcs}, all functions containing the symbol '*' are part of a set of functions returning a certain type of element. These functions return the number of that element in the tgeometry, the first, last or N'th element, and an array containing all elements respectively. This set is defined for the \textit{Timestamp}, \textit{Instant} and \textit{Sequence} elements. A complete list of these functions can be found in Appendix \ref{appendix:mobdb_functions}.
+
+\subsection{Always/Ever Comparison}
+\label{section:always_ever}
+
+\subsection{Restriction and Difference Functions}
+\label{section:restriction_and_difference}
+
+\subsection{Comparison Functions and B-Tree Indexing}
+\label{section:comparison_b_tree}
+
+\subsection{Input Functions}
+\label{section:input_funcs}
+
+\subsection{Output Functions}
+\label{section:output_funcs}
+
+% \subsection{Temporal Comparison Functions and Operators}
+% \label{section:temporal_comparison}
+
+% \subsection{Spatial Functions}
+% \label{section:spatial_funcs}
+
+\subsection{Bounding Box Functions and Operators}
+\label{section:bbox_funcs}
+
+Bounding boxes are precomputed for temporal geometries of instant set, sequence and sequence set duration. These boxes are used in multiple functions to prune some input values with fast checks applied before the function itself. For example, if we want to compute the instants at which two regions were within 5 meters of each other, we can first compute the minimum distance between the bounding boxed and return an empty value if this distance is larger than 5 meters.
+
+Computing this bounding box is relatively tricky when the temporal geometry is a sequence or a sequence set, since the bounding box is not simply the union of the bounding boxes of all instants. Section \ref{section:bbox} explains how the bounding boxes of moving regions can be computed in two different ways.
+
+Some bounding box operators are also exposed to the user . These operators are polymorphic and allow all types of input that can be casted into an spatio-temporal box (STbox). 
+
+\begin{table}[h!]
+    \centering
+    \begin{tabularx}{\textwidth}{|l|l|X|}
+    \hline
+    \textbf{Function}   & \textbf{Operator} & \textbf{Signature} \\ 
+    \hline
+    stbox               & & tgeometry $\rightarrow$ stbox\\
+    \hline
+    expandSpatial       & & tgeometry x float $\rightarrow$ stbox\\
+    \hline
+    expandTemporal      & & tgeometry x interval $\rightarrow$ stbox \\
+    \hline
+    contains\_bbox      & $@>$ & \{tgeometry, geometry, stbox\} x \{tgeometry, geometry, stbox\} $\rightarrow$ stbox \\
+    \hline
+    contained\_bbox     & $<@$ & \{tgeometry, geometry, stbox\} x \{tgeometry, geometry, stbox\} $\rightarrow$ stbox \\
+    \hline
+    overlaps\_bbox      & $\&\&$ & \{tgeometry, geometry, stbox\} x \{tgeometry, geometry, stbox\} $\rightarrow$ stbox \\
+    \hline
+    same\_bbox          & $\sim=$ & \{tgeometry, geometry, stbox\} x \{tgeometry, geometry, stbox\} $\rightarrow$ stbox \\
+    \hline
+    adjacent\_bbox      & $-\mid-$ & \{tgeometry, geometry, stbox\} x \{tgeometry, geometry, stbox\} $\rightarrow$ stbox \\
+    \hline
+    \end{tabularx}
+    \caption{Bounding box functions and operators}
+    \label{table:bbox_funcs}
+\end{table}
+
+% \subsection{Relative Position Operators}
+% \label{section:relposops}
+
+% \subsection{Temporal Distance}
+% \label{section:temporal_distance}
+
+% \subsection{Aggregation}
+% \label{section:aggregate_funcs}
+
+% \subsection{Spatial Relationships}
+% \label{section:spatial_rels}
+
+% \subsection{Temporal Spatial Relationships}
+% \label{section:temp_spatial_rels}
+
+% \subsection{R-Tree GIST Index}
+% \label{section:gist_index}
+
+% \subsection{Oct-Tree SP-GIST Index}
+% \label{section:sp_gist_index}

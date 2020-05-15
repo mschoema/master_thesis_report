@@ -1,29 +1,24 @@
 @inproceedings{mobilitydb,
 	author 		= {Zim\'{a}nyi, Esteban and Sakr, Mahmoud and Lesuisse, Arthur and Bakli, Mohamed},
-	title 			= {MobilityDB: A Mainstream Moving Object Database System},
+	title 		= {MobilityDB: A Mainstream Moving Object Database System},
 	year 		= {2019},
 	isbn 		= {9781450362801},
 	publisher 	= {Association for Computing Machinery},
-	address 		= {New York, NY, USA},
-	url 			= {https://doi.org/10.1145/3340964.3340991},
-	doi 			= {10.1145/3340964.3340991},
+	address 	= {New York, NY, USA},
+	url 		= {https://doi.org/10.1145/3340964.3340991},
+	doi 		= {10.1145/3340964.3340991},
 	booktitle 	= {Proceedings of the 16th International Symposium on Spatial and Temporal Databases},
 	pages 		= {206–209},
 	numpages 	= {4},
 	keywords 	= {Spatiotemporal Trajectories, Mobility Analytics, Floating Car Data, Map Matching},
-	location 		= {Vienna, Austria},
+	location 	= {Vienna, Austria},
 	series	 	= {SSTD ’19}
 }
 
-@article{moving_obj_foundation,
-	author 		= {Güting, Ralf and Böhlen, Michael and Erwig, Martin and Jensen, Christian and Lorentzos, Nikos and Schneider, Markus and Vazirgiannis, Michalis},
-	title 			= {A Foundation for Representing and Querying Moving Objects},
-	year	 		= {2000},
-	month		= {03},
-	pages 		= {1-42},
-	volume	 	= {25},
-	journal 		= {ACM Transactions on Database Systems (TODS)},
-	doi 			= {10.1145/352958.352963}
+@manual{mobiliydb_manual,
+	author = {Zim\'{a}nyi, Esteban},
+	title = {MobilityDB Manual},
+	year = {2020}	
 }
 
 @article{fmregion,
@@ -39,26 +34,224 @@
     	doi           	= {10.1080/13658816.2018.1458103}
 }
 
-@article{doi:10.1080/13658816.2019.1616090,
+@article{polyhedra,
 	author 		= {Florian Heinz and Ralf Hartmut Güting},
-	title 			= {A polyhedra-based model for moving regions in databases},
-	journal 		= {International Journal of Geographical Information Science},
+	title 		= {A polyhedra-based model for moving regions in databases},
+	journal 	= {International Journal of Geographical Information Science},
 	volume 		= {34},
 	number 		= {1},
 	pages 		= {41-73},
 	year  		= {2020},
 	publisher 	= {Taylor & Francis},
-	doi 			= {10.1080/13658816.2019.1616090},
+	doi 		= {10.1080/13658816.2019.1616090},
 	URL 		= {https://doi.org/10.1080/13658816.2019.1616090},
 }
 
-@techreport{ISO19141,
+@online{postgresql,
+	author 	= {The PostgreSQL Global Development Group},
+	title 	= {PostgreSQL: The World's Most Advanced Open Source Relational Database},
+	year 	= {1996-2020},
+	url = {https://www.postgresql.org/}
+}
+
+@online{postgis,
+	title 	= {postgis -- Spatial and Geographic objects for PostgreSQL},
+	year 	= {2001-2020},
+	url = {https://postgis.net/}
+}
+
+@techreport{ISO19141_moving_features,
 	type 		= {Standard},
-	key 			= {ISO 19141:2008(E)},
-	month 		= jun,
+	key 		= {ISO 19141:2008(E)},
 	year 		= {2008},
-	title 			= {Geographic information -- Schema for moving features},
+	title 		= {Geographic information -- Schema for moving features},
 	volume 		= {2008},
-	address 		= {Geneva, CH},
-	institution 	= {International Organization for Standardization}
+	address 	= {Geneva, CH},
+	institution = {International Organization for Standardization}
+}
+
+@article{model_structure_for_mod,
+	author 		= {Forlizzi, Luca and G\"{u}ting, Ralf Hartmut and Nardelli, Enrico and Schneider, Markus},
+	title 		= {A Data Model and Data Structures for Moving Objects Databases},
+	year 		= {2000},
+	publisher 	= {Association for Computing Machinery},
+	address 	= {New York, NY, USA},
+	volume 		= {29},
+	number 		= {2},
+	issn 		= {0163-5808},
+	url 		= {https://doi.org/10.1145/335191.335426},
+	doi 		= {10.1145/335191.335426},
+	journal 	= {SIGMOD Rec.},
+	pages 		= {319–330},
+	numpages 	= {12}
+}
+
+@article{moving_obj_foundation,
+	author 	= {Güting, Ralf and Böhlen, Michael and Erwig, Martin and Jensen, Christian and Lorentzos, Nikos and Schneider, Markus and Vazirgiannis, Michalis},
+	title 	= {A Foundation for Representing and Querying Moving Objects},
+	year	= {2000},
+	month	= {03},
+	pages 	= {1-42},
+	volume	= {25},
+	journal = {ACM Transactions on Database Systems (TODS)},
+	doi 	= {10.1145/352958.352963}
+}
+
+@article{temporal_data_rdbms,
+	author 	= {Crowe, Malcolm},
+	year 	= {2007},
+	month 	= {06},
+	title 	= {A simple approach to Temporal Data in Relational DBMS},
+	doi 	= {10.2495/DATA070121}
+}
+
+@article{algos_for_mod,
+    author 	= {Cotelo Lema, José Antonio and Forlizzi, Luca and Güting, Ralf Hartmut and Nardelli, Enrico and Schneider, Markus},
+    title 	= "{Algorithms for Moving Objects Databases}",
+    journal = {The Computer Journal},
+    volume 	= {46},
+    number 	= {6},
+    pages 	= {680-712},
+    year 	= {2003},
+    month 	= {01},
+    issn 	= {0010-4620},
+    doi 	= {10.1093/comjnl/46.6.680},
+    url 	= {https://doi.org/10.1093/comjnl/46.6.680},
+    eprint 	= {https://academic.oup.com/comjnl/article-pdf/46/6/680/1070321/460680.pdf},
+}
+
+@InProceedings{repr_from_obs,
+	author		= "T{\o}ssebro, Erlend and G{\"u}ting, Ralf Hartmut",
+	editor		= "Jensen, Christian S. and Schneider, Markus and Seeger, Bernhard and Tsotras, Vassilis J.",
+	title		= "Creating Representations for Continuously Moving Regions from Observations",
+	booktitle	= "Advances in Spatial and Temporal Databases",
+	year		= "2001",
+	publisher	= "Springer Berlin Heidelberg",
+	address		= "Berlin, Heidelberg",
+	pages		= "321--344",
+	isbn		= "978-3-540-47724-2"
+}
+
+@article{mobility_data,
+	author 	= {Vaisman, Alejandro and Zimanyi, Esteban},
+	year 	= {2019},
+	month 	= {04},
+	pages 	= {170},
+	title 	= {Mobility Data Warehouses},
+	volume 	= {8},
+	journal = {ISPRS International Journal of Geo-Information},
+	doi 	= {10.3390/ijgi8040170}
+}
+
+@inproceedings{modeling_and_representing,
+  author 	= {Jos{\'e} Moreira and Jos{\'e} Duarte and Paulo Dias},
+  title 	= {{Modeling and Representing Real-World Spatio-Temporal Data in Databases (Vision Paper)}},
+  booktitle = {14th International Conference on Spatial Information Theory (COSIT 2019)},
+  pages     = {6:1--6:14},
+  series 	= {Leibniz International Proceedings in Informatics (LIPIcs)},
+  ISBN 		= {978-3-95977-115-3},
+  ISSN 		= {1868-8969},
+  year 		= {2019},
+  volume 	= {142},
+  editor 	= {Sabine Timpf and Christoph Schlieder and Markus Kattenbeck and Bernd Ludwig and Kathleen Stewart},
+  publisher = {Schloss Dagstuhl--Leibniz-Zentrum fuer Informatik},
+  address 	= {Dagstuhl, Germany},
+  URL 		= {http://drops.dagstuhl.de/opus/volltexte/2019/11098},
+  URN 		= {urn:nbn:de:0030-drops-110984},
+  doi 		= {10.4230/LIPIcs.COSIT.2019.6}
+}
+
+@inproceedings{moving_obj_databases,
+	author 	= {Wolfson, Ouri and Xu, Bo and Chamberlain, S. and Jiang, L.},
+	year 	= {1998},
+	month 	= {08},
+	pages 	= {111-122},
+	title 	= {Moving objects databases: Issues and solutions},
+	isbn 	= {0-8186-8575-1},
+	journal = {Proceedings on the Tenth International Conference on Scientific and Statistical Database Management},
+	doi 	= {10.1109/SSDM.1998.688116}
+}
+
+@inproceedings{domino_new,
+	author 	= {Wolfson, Ouri},
+	year 	= {2002},
+	month 	= {06},
+	pages 	= {75-89},
+	title 	= {Moving Objects Information Management: The Database Challenge},
+	journal = {Proceedings of the 5th International Workshop on Next Generation Information Technologies and Systems},
+	doi 	= {10.1007/3-540-45431-4_7}
+}
+
+@inproceedings{secondo,
+	author 	= {Almeida, V. and Güting, Ralf and Behr, T.},
+	year 	= {2006},
+	month 	= {06},
+	pages 	= {47 - 47},
+	title 	= {Querying Moving Objects in SECONDO},
+	isbn 	= {0-7695-2526-1},
+	doi 	= {10.1109/MDM.2006.133}
+}
+
+@Article{high_quality_interpol,
+	author	= {Heinz, Florian and G{\"u}ting, Ralf Hartmut},
+	title	= {Robust high-quality interpolation of regions to moving regions},
+	journal = {GeoInformatica},
+	year	= {2016},
+	month	= {Jul},
+	day		= {01},
+	volume	= {20},
+	number	= {3},
+	pages	= {385-413},
+	issn	= {1573-7624},
+	doi 	= {10.1007/s10707-015-0240-z},
+	url 	= {https://doi.org/10.1007/s10707-015-0240-z}
+}
+
+@inproceedings{domino,
+	author 	= {Wolfson, Ouri and Sistla, A. and Xu, Bo and Zhou, Jutai and Chamberlain, Sam and Yesha, Yelena and Rishe, N.},
+	year 	= {1999},
+	month 	= {09},
+	pages 	= {},
+	title 	= {Tracking Moving Objects Using Database Technology in DOMINO},
+	volume 	= {1649},
+	doi 	= {10.1007/3-540-48521-X_9}
+}
+
+@inproceedings{3d_geom,
+	author 	= {Zlatanova, Sisi},
+	year 	= {2006},
+	month 	= {01},
+	pages 	= {1-14},
+	title 	= {3D Geometries in Spatial DBMS},
+	doi 	= {10.1007/978-3-540-36998-1_1}
+}
+
+@article{3d_polyhedron,
+	ISSN 		= {0096736X, 25771531},
+ 	URL 		= {http://www.jstor.org/stable/44650564},
+ 	author 		= {Luciano Fornasier and Werner Kraus and Herbert Rieger},
+	journal 	= {SAE Transactions},
+	pages 		= {1754--1759},
+ 	publisher 	= {SAE International},
+ 	title 		= {A CFD-Based, Application-Oriented, Integrated Simulation Environment for Rapid Prediction of Aerodynamic Sensitivities of 3-D Configurations},
+ 	volume 		= {106},
+ 	year 		= {1997}
+}
+
+@book{computational_geometry,
+  author    = {Mark de Berg and Otfried Cheong and Marc van Kreveld and Mark Overmars}, 
+  title     = {Computational Geometry: Algorithms and Applications},
+  publisher = {Springer-Verlag},
+  year      = 2008,
+  month     = 2,
+  edition   = 3,
+  note      = {A broad overview of the major algorithms and data structures of the field},
+  isbn      = {978-3-540-77973-5}
+}
+
+@techreport{quaternions,
+	title	={Quaternions, Interpolation and Animation},
+ 	author	={Erik Bj{\o}rnager Dam and Martin Dipl Ing Koch and Martin Lillholm},
+  	institution = {Department of Computer Science, University of Copenhagen},
+  	year	={2000},
 }

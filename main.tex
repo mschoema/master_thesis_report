@@ -7,11 +7,18 @@
 \usepackage{subcaption}
 \usepackage{color}
 \usepackage{tikz}
-\usepackage{tabularx}
 \usepackage{amsmath}
 \usepackage{amsfonts}
+\usepackage[noend]{algpseudocode}
 
 \usepackage{lipsum} 
+
+\usepackage{tabularx}
+\renewcommand{\arraystretch}{1.2}
+
+\usepackage{mathtools}
+\DeclarePairedDelimiter\ceil{\lceil}{\rceil}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
 
 \usepackage{graphicx}
 \graphicspath{ {images/} }
@@ -29,6 +36,7 @@
 \addbibresource{references.bib}
 
 \newcommand{\note}[1]{\textcolor{red}{[#1]}}
+\newcommand{\eqtab}{\;\;\;\;\;\;}
 
 \title{Master Thesis}
 \author{Maxime Schoemans}
@@ -37,41 +45,64 @@
 \begin{document}
 
 \input{cover}
+\thispagestyle{empty}
 
 \chapter*{Résumé}
 \input{intro/resume}
+\thispagestyle{empty}
 
 \chapter*{Abstract}
 \input{intro/abstract}
+\thispagestyle{empty}
  
 \chapter*{Acknowledgments}
 \input{intro/acknowledgments}
- 
+\thispagestyle{empty}
+
+\clearpage
+\pagenumbering{roman}
+\setcounter{page}{1}
+
 \tableofcontents
 
 \listoffigures
 
 \listoftables
 
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
 \chapter{Introduction}
 \input{chapters/introduction}
- 
-\chapter{Theory}
-\input{chapters/theory}
- 
+
+\chapter{Systems Used}
+\input{chapters/systems} 
+
+\chapter{Moving Regions}
+\input{chapters/moving_regions} 
+
 \chapter{Implementation}
-\input{chapters/implementation}
+\input{chapters/tgeometry_types}
+\input{chapters/rtransform_functions}
+\input{chapters/general_functions}
+\input{chapters/internal_functions}
+
+\chapter{Future Work}
+\input{chapters/tgeography_and_tgeompoint}
+\input{chapters/3d_regions}
+\input{chapters/deformable_regions}
  
-\chapter{Use case}
-\input{chapters/usecase}
- 
-\chapter{Conclusion and future work}
+\chapter{Conclusion}
 \input{chapters/conclusion}
 
 \appendix
 
-\chapter{Appendix Title}
-\input{appendices/appendix}
+\chapter{Complete List of Transformation Functions}
+\input{appendices/complete_funct_tables}
+
+\chapter{Conversions Between 3D Rotation Representations}
+\input{appendices/rot_repr_conversions}
 
 \nocite{*}
 \printbibliography
