@@ -1,0 +1,12 @@
+Things to do:
+Ok - Contributions -> maybe write that in conclusion
+- Formal intro/def of moving regions? -> discuss in email, but prob not
+Ok - Finish the list of internal functions
+- Add images for normalization, standalone inst and traversed area
+Ok - Make appendix 1 table in 2 pages
+Ok - Write appendix 2 -> Removed appendix 2
+Ok - Write conclusion -> mix of summary and contributions
+- Write abstract
+Ok - Put gray background behind SQL in 'systems' section -> maybe not needed
+- use \times instead of X in equations
+- Use lstinline instead of italic for code elements + check use of italic

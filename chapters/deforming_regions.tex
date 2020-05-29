@@ -1,0 +1,26 @@
+%!TEX root = ../main.tex
+
+\section{Deforming regions}
+\label{section:deforming}
+
+A last aspect of moving regions that is not handled in this thesis are the deforming moving regions. Section \ref{section:deforming_regions} describes some of the research made on this type of regions, but as explained in that section, the most common representation is not suitable for MobilityDB and has to be adapted quite a bit. This special sliced representation is used to allow for an efficient interpolation. Of course, if we are talking about regions moving in discrete time steps, this interpolation is not necessary, and the sliced representation does not offer any advantage over the MobilityDB representation. We can thus split the set of deforming moving regions in two.
+
+A deforming region subject to continuous transformations is the most difficult type to handle, but is also the type most present in real-life: boundaries of forests, ponds, oil leaks in the ocean, clouds, etc. However, as said previously, the current solutions for this type of region is quite far from the MobilityDB implementation, so it will not be discussed further. Regions changing in discrete time steps, however, can be implemented without too much trouble in MobilityDB, and this is discussed below.
+
+Note that, contrary to all previous section, these ideas have not been tested in practice, so this is only a discussion and not a presentation of results.
+
+\subsubsection{Discrete movement}
+
+The main issue when handling deforming regions is that the value of the region between two defined instants is hard to interpolate. For regions that move in discrete time steps, this is not the case anymore, since this value is equal to the one stored in the last instant. Since interpolation is not an issue anymore, we do not have to adapt the representation and this type of moving regions can thus be represented easily using the internal MobilityDB representation. 
+
+\[
+    '\{[\mathcal{R}_0^0@t_0^0,\ \mathcal{R}_1^0@t_1^0,\ ...],\ [\mathcal{R}_0^1@t_0^1,\ \mathcal{R}_1^1@t_1^1,\ ...],\ ...\}'
+\]
+
+, where all region values $\mathcal{R}_i^i$ are different from each other, because we handle deforming regions.
+
+This representation would be totally acceptable and all the needed functions could be implemented to handle this new type. The only true issue that I can see with this representation is that the memory size might become large when handling large sequences/set. One possible solution would be to store a difference between the current region and the previous one if this is smaller than the current region, but depending on the changes that the region undergoes, this might not be beneficial.
+
+One good example of a use case for this type of regions is a \textit{cadastre}, which records the ownership of land parcels in countries. Cadastral updates are by nature discrete, and the different parcels in a cadastre could thus be represented like shown above.
+
+Implementing of this new region type, and testing if and how it could be used for real-world applications such as cadastres is left as future work.

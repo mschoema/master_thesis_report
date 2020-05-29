@@ -16,13 +16,62 @@ PostGIS \cite{postgis}, released in 2001, is one example of an extension to the 
 
 This extension allows \textit{Geographical Information System} [GIS] objects, such as points, linestring or polygons, to be stored in the database. It also includes support for processing and analyzing GIS objects, by defining functions and operations that can be used to process them, such as distance and area functions.
 
-A PostGIS type that will be used a lot in this thesis is the \textit{Polygon} type, since this will be used to represent a static region. A PostGIS polygon object is defined as having an exterior ring, as well as zero or more interior rings, that define holes in the polygon. Figure \ref{fig:polygons} shows some example of polygons that are accepted or rejected by the PostGIS implementation.
+A PostGIS type that will be used a lot in this thesis is the \textit{Polygon} type, since this will be used to represent a static region. 
+
+\subsection{PostGIS Polygon Type}
+\label{section:postgis_polygon}
+
+A PostGIS polygon object is defined as having an exterior ring, as well as zero or more interior rings that define holes in the polygon. The PostGIS \textit{linestring} type is used to described these rings. A linestring
+is a list of points representing a continuous line composed of multiple segments. For this linestring to be valid, it cannot intersect itself in any point (Figure \ref{fig:linestring_normal}). The only exception is that the endpoints of the segments can be identical, and in that case the linestring is \textit{closed} (Figure \ref{fig:linestring_closed}). Both the exterior and interior rings of a polygon are described using closed linestrings.
 
 \begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.75\textwidth]{images/polygons.pdf}
-    \caption{Examples of regions that can (brown and purple) or cannot (green) be represented using the PostGIS polygon type.}
-    \label{fig:polygons}
+\centering
+\begin{subfigure}{.3\textwidth}
+  \centering
+  \includegraphics[width=.9\linewidth]{images/linestring_normal.pdf}
+  \caption{}
+  \label{fig:linestring_normal}
+\end{subfigure}
+\begin{subfigure}{.3\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{images/linestring_intersect.pdf}
+  \caption{}
+  \label{fig:linestring_intersect}
+\end{subfigure}
+\begin{subfigure}{.3\textwidth}
+  \centering
+  \includegraphics[width=.7\linewidth]{images/linestring_closed.pdf}
+  \caption{}
+  \label{fig:linestring_closed}
+\end{subfigure}
+\caption{Examples of valid (a, c) and invalid (b) PostGIS linestrings}
+\label{fig:postgis_linestring}
+\end{figure}
+
+A PostGIS polygon is valid if no two of its rings intersect (Figure \ref{fig:polygon_normal}), except in a single point on the boundary of the polygon (Figure \ref{fig:polygon_tangent}). The polygon cannot have lines or spikes (\ref{fig:polygon_spike}), and the interior rings cannot be defined outside of the exterior ring.
+
+\begin{figure}[h!]
+\centering
+\begin{subfigure}{.3\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{images/polygon_normal.pdf}
+  \caption{}
+  \label{fig:polygon_normal}
+\end{subfigure}
+\begin{subfigure}{.3\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{images/polygon_tangent.pdf}
+  \caption{}
+  \label{fig:polygon_tangent}
+\end{subfigure}
+\begin{subfigure}{.3\textwidth}
+  \centering
+  \includegraphics[width=.8\linewidth]{images/polygon_spike.pdf}
+  \caption{}
+  \label{fig:polygon_spike}
+\end{subfigure}
+\caption{Examples of valid (a, b) and invalid (c) PostGIS polygons}
+\label{fig:postgis_polygon}
 \end{figure}
 
 Contrary to most research papers about moving regions \cite{polyhedra,model_structure_for_mod,moving_obj_foundation}, this definition of a region does not allow a region/polygon to have multiple faces, which is usually necessary to be able to describe regions that split or merge together. PostGIS allows the creation of multi-polygons, which could theoretically be used to describe a region made of multiple faces, but since in our case we will only handle non-deforming (fixed-shape) regions, there will be no need for polygons to merge or split, so this will not be discussed further.
@@ -49,10 +98,9 @@ Temporal types can have four possible duration: Instant, Instant Set, Sequence a
 A temporal instant represents the value of an object at a particular timestamp using the following notation:
 
 \[
-    'v@t'
+    'v@t',
 \]
-
-, where \(v\) is the value and \(t\) is the timestamp.
+where \(v\) is the value and \(t\) is the timestamp.
 
 For example, if we want to store the fact that the temperature of a room was 21 (degrees Celsius) on September 1st 2019 at midnight, we will store this as:
 
@@ -66,10 +114,9 @@ For example, if we want to store the fact that the temperature of a room was 21 
 As the name hints, temporal instant sets are simply sets of temporal instants. Temporal objects of instant set duration are used to represent a value that is defined at multiple instants in time, without being defined in between these instants. For example, a temporal instant set composed of 3 instants will be written as:
 
 \[
-    '\{v_0@t_0,\ v_1@t_1,\ v_2@t_2\}'
+    '\{v_0@t_0,\ v_1@t_1,\ v_2@t_2\}',
 \]
-
-, where \(v_i\) are the values and \(t_i\) are the timestamps in increasing order \(t_i < t_{i+1}\).
+where \(v_i\) are the values and \(t_i\) are the timestamps in increasing order \(t_i < t_{i+1}\).
 
 The value of this object is thus defined only at the given timestamps, and no assumptions are made for intermediate timestamps.
 
@@ -87,10 +134,9 @@ An example of a linear interpolation could be the case of a room thermometer. If
 A temporal sequence composed of 3 instants is written as:
 
 \[
-    '[v_0@t_0,\ v_1@t_1,\ v_2@t_2]'
+    '[v_0@t_0,\ v_1@t_1,\ v_2@t_2]',
 \]
-
-, with again \(t_i < t_{i+1}\).
+with again \(t_i < t_{i+1}\).
 
 A temporal sequence has a lower and upper bound that can be either inclusive (represented by '[' and ']') or exclusive (represented by '(' and ')').
 
@@ -100,10 +146,9 @@ A temporal sequence has a lower and upper bound that can be either inclusive (re
 A temporal value of sequence set duration represents the evolution of the value over a set of sequences, with the value between these sequences being unknown. A temporal sequence set with 2 sequences of 2 instants each will be written as:
 
 \[
-    '\{[v_0@t_0,\ v_1@t_1],\ [v_2@t_2,\ v_3@t_3]\}'
+    '\{[v_0@t_0,\ v_1@t_1],\ [v_2@t_2,\ v_3@t_3]\}',
 \]
-
-, where the same inclusion/exclusion rules as for sequences apply.
+where the same inclusion/exclusion rules as for sequences apply.
 
 It would theoretically be enough to only implement the temporal sequence set type, since all three previous types are essentially special cases of this one, but for efficiency reasons all four types exist.
 
@@ -132,19 +177,19 @@ Note that this list is only there to introduce the set of functions exposed by M
 
         These functions are used to transform a temporal value into another duration. If the transformation is not possible, an error will be raised. 
 
-        Ex.: tintseq:
-        \begin{flalign*}
-            & \text{SELECT tintseq(tint }'1@\text{2001-01-01}'\text{);}     &&\\
-            & \text{- - }"[1@\text{2001-01-01}]"                            &&
-        \end{flalign*}
+        e.g., tintseq:
+        \begin{lstlisting}
+SELECT tintseq(tint '1@2001-01-01');
+-- "[1@2001-01-01]"
+        \end{lstlisting}
 
         Appending a temporal instant to the temporal value, and merging two temporal values of the same duration, is also a part of the transformation functions.
 
-        Ex.: appendInstant:
-        \begin{flalign*}
-            & \text{SELECT appendInstant(tint }'1@\text{2001-01-01}',\ \text{tint }'1@\text{2001-01-02}'\text{);}     &&\\
-            & \text{- - }"\{1@\text{2001-01-01},\ 1@\text{2001-01-02}\}"                            &&
-        \end{flalign*}
+        e.g., appendInstant:
+        \begin{lstlisting}
+SELECT appendInstant(tint '1@2001-01-01', tint '1@2001-01-02');
+-- "{1@2001-01-01, 1@2001-01-02}"
+        \end{lstlisting}
 
     \item Accessor Functions:
 
@@ -152,57 +197,56 @@ Note that this list is only there to introduce the set of functions exposed by M
 
         Some example functions are shown below:
 
-        Ex. 1: memsize:
-        \begin{flalign*}
-            & \text{SELECT memsize(tint }'[1@\text{2001-01-01},\ 2@\text{2001-01-02},\ 1@\text{2001-01-03}]'\text{);}     &&\\
-            & \text{- - }280                            &&
-        \end{flalign*}
+        e.g., memsize:
+        \begin{lstlisting}
+SELECT memsize(tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]');
+-- 280
+        \end{lstlisting}
 
-        Ex. 2: getValue:
-        \begin{flalign*}
-            & \text{SELECT duration(tint }'1@\text{2001-01-01}'\text{);}     &&\\
-            & \text{- - }1                            &&
-        \end{flalign*}
+        e.g., getValue:
+        \begin{lstlisting}
+SELECT getValue(tint '1@2001-01-01');
+-- 1
+        \end{lstlisting}
 
-        Ex. 3: instantN:
-        \begin{flalign*}
-            & \text{SELECT instantN(tint }'[1@\text{2001-01-01},\ 2@\text{2001-01-02},\ 1@\text{2001-01-03}]', \ 2\text{);}     &&\\
-            & \text{- - }"2@\text{2001-01-02}"                            &&
-        \end{flalign*}
+        e.g., instantN:
+        \begin{lstlisting}
+SELECT instantN(tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]', 2);
+-- "2@2001-01-02"
+        \end{lstlisting}
 
     \item Spatial Functions
 
         Spatial functions that can be applied to temporal points. Most of the functions support 3D points, and/or are available for geographies.
 
-        These functions range from output in specific format (ex: \textit{EWK} or \textit{MFJSON}), to more complicated accessor functions, such as \textit{speed} or \textit{nearestApproachDistance}.
+        These functions range from output in specific format (e.g., \textit{EWK} or \textit{MFJSON}), to more complicated accessor functions, such as \textit{speed} or \textit{nearestApproachDistance}.
 
-        Ex.: speed:
-        \begin{flalign*}
-            & \text{SELECT speed(tgeompoint }'[\text{Point}(1\ 0)@\text{2001-01-01},\ &&\\
-            & \eqtab\text{Point}(1\ 0)@\text{2001-01-02},\ \text{Point}(1\ 1)@\text{2001-01-03}]') * 3600 * 24;     &&\\
-            & \text{- - }"\{[0@\text{2001-01-01}, 0@\text{2001-01-02}),\ [1@\text{2001-01-02}, 1@\text{2001-01-03}]\}"                            &&
-        \end{flalign*}
+        e.g., speed:
+        \begin{lstlisting}
+SELECT speed(tgeompoint '[Point(1 0)@2001-01-01, Point(1 0)@2001-01-02, Point(1 1)@2001-01-03]') * 3600 * 24;
+-- "{[0@2001-01-01, 0@2001-01-02], [1@2001-01-02, 1@2001-01-03]}"
+        \end{lstlisting}
 
     \item Restriction Functions:
 
         These functions restrict a temporal value, either on its value extent or its time extent.
         Example of restriction functions are: \textit{atValue}, \textit{atMax}, \textit{atPeriod}, etc.
 
-        Ex.: atMax:
-        \begin{flalign*}
-            & \text{SELECT atMax(tint }'[1@\text{2001-01-01},\ 2@\text{2001-01-02},\ 1@\text{2001-01-03}]'\text{);}     &&\\
-            & \text{- - }"\{[2@\text{2001-01-02}]\}"                            &&
-        \end{flalign*}
+        e.g., atMax:
+        \begin{lstlisting}
+SELECT atMax(tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]');
+-- "{[2@2001-01-02]}"
+        \end{lstlisting}
 
     \item Difference Functions:
 
         These functions act similarly to the restriction functions, except that they restrict the temporal value to the complement of a value or a time extent.
 
-        Ex.: minusValue:
-        \begin{flalign*}
-            & \text{SELECT minusValue(tint }'[1@\text{2001-01-01},\ 2@\text{2001-01-02},\ 1@\text{2001-01-03}]',\ 2);     &&\\
-            & \text{- - }"\{[1@\text{2001-01-01},\ 1@\text{2001-01-02}),\ [1@\text{2001-01-03}]\}"                            &&
-        \end{flalign*}
+        e.g., minusValue:
+        \begin{lstlisting}
+SELECT minusValue(tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]', 2);
+-- "{[1@2001-01-01, 1@2001-01-02), [1@2001-01-03]}"
+        \end{lstlisting}
 
     \item Comparison Operators
 
@@ -216,11 +260,11 @@ Note that this list is only there to introduce the set of functions exposed by M
 
         These comparison operators are generalization of the traditional comparison operators, and return a \textit{tbool} value.
 
-        Ex.: temporal not equal, $\#<>$:
-        \begin{flalign*}
-            & \text{SELECT tint }'[1@\text{2001-01-01},\ 4@\text{2001-01-04}]'\ \#<> 2;     &&\\
-            & \text{- - }"\{[t@\text{2001-01-01},\ f@\text{2001-01-02},\ t@\text{2001-01-03},\ t@\text{2001-01-04}]\}"                            &&
-        \end{flalign*}
+        e.g., temporal not equal, \lstinline{#<>}:
+        \begin{lstlisting}
+SELECT tint '[1@2001-01-01, 4@2001-01-04]' #<> 2;
+-- "{[t@2001-01-01, f@2001-01-02, t@2001-01-03, t@2001-01-04]}"
+        \end{lstlisting}
 
     \item Mathematical Function Operators
 
@@ -238,11 +282,11 @@ Note that this list is only there to introduce the set of functions exposed by M
 
         These are the comparison operators on the corresponding bounding boxes of temporal values. Operators exist for different kind of relationships (for example: less than, contains, overlaps, equal, etc) and for all possible dimensions of the bounding boxes (value/X, Y, Z and T dimension). As said previously, the Y and Z dimensions are only used in case of temporal points. These functions all return a boolean value.
 
-        Ex.: Bounding box overlap, $\&\&$:
-        \begin{flalign*}
-            & \text{SELECT tint }'[1@\text{2001-01-01},\ 4@\text{2001-01-04}]'\ \&\&\ 2;     &&\\
-            & \text{- - true}                            &&
-        \end{flalign*}
+        e.g., Bounding box overlap, \lstinline{&&}:
+        \begin{lstlisting}
+SELECT tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]' && 2);
+-- true
+        \end{lstlisting}
 
     \item Distance Operators
 
@@ -250,7 +294,7 @@ Note that this list is only there to introduce the set of functions exposed by M
 
     \item Spatial Relationships for Temporal Points
 
-        The PostGIS spatial relationships functions (such as \textit{ST\_Intersects} and \textit{ST\_Relate}) are generalized in two different ways. In the first version the PostGIS functions are applied to the union of all values taken by a temporal point (ex. \textit{intersects} and \textit{relate}). The second version is defined with temporal semantics and returns a temporal value. For the two example functions, the second version is \textit{tintersects} and \textit{trelate}, which return a \textit{tbool} and a \textit{ttext} respectively.
+        The PostGIS spatial relationships functions (such as \textit{ST\_Intersects} and \textit{ST\_Relate}) are generalized in two different ways. In the first version, the PostGIS functions are applied to the union of all values taken by a temporal point (for example, \textit{intersects} and \textit{relate}). The second version is defined with temporal semantics and returns a temporal value. For the two example functions, the second version is \textit{tintersects} and \textit{trelate}, which return a \textit{tbool} and a \textit{ttext} respectively.
 
     \item Aggregate Functions for Temporal Types
 

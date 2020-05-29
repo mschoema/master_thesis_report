@@ -2,7 +2,7 @@
 
 \section{Context}
 
-Temporal or spatio-temporal data exists in many types. It ranges from simple values evolving through time (ex. temperature) to positions or even regions moving through time. Most current relational databases are not well-suited to handle this temporal data, and thus heavy research has already been done to develop databases capable of storing and querying temporal data efficiently \cite{moving_obj_databases}. These databases are called \textit{Moving Object Databases} [MOD].
+Temporal or spatio-temporal data exists in many types. It ranges from simple values evolving through time (e.g., temperature) to positions or even regions moving through time. Most current relational databases are not well-suited to handle this temporal data, and thus heavy research has already been done to develop databases capable of storing and querying temporal data efficiently \cite{moving_obj_databases}. These databases are called \textit{Moving Object Databases} [MOD].
 
 MODs have to handle a large variety of (spatio-)temporal object, also called \textit{moving objects}. Moving reals can be used to represent the temperature of a room; moving points store the position of cars, planes and more; moving regions are used to keep track of forest fires, glacier extents and more. Heavy research is being done on moving points, since this data is abundant and there is a need to analyze it efficiently. Due to the complexity and the limited use of moving regions, this area is less developed. Still, previous research analyzed the construction of a moving region from snapshots \cite{repr_from_obs,high_quality_interpol}, or developed novel data models for representing moving regions efficiently \cite{polyhedra,fmregion}.
 
@@ -10,22 +10,35 @@ Despite all this previous work, most research ideas still have to be implemented
 
 \section{Structure and Objective of the Thesis}
 
-The first part of this thesis describe the current implementation of moving objects into MobilityDB. This section details the structure of the system and the internal storage of the new types. The first goal of this thesis is to understand the system, since the next part will involve making additions and modifications.
+The first part of this thesis describe the current implementation of moving objects into MobilityDB. Section \ref{section:mobilitydb} details the structure of the system and the internal storage of the new types. The first goal of this thesis is to understand the system, since the next part will involve making additions and modifications.
 
-In a second step, we will discuss the different type of moving regions, with examples of real-world use cases. Depending on the type of moving region that needs to be handled, the implementation can vary considerably. For this reason, this master thesis will focus mainly on one type, fixed-shape moving regions.
+In a second step, Section \ref{section:moving_regions} will discuss the different types of moving regions, with examples of real-world use cases. Depending on the type of moving region that needs to be handled, the implementation can vary considerably. For this reason, this master thesis will focus mainly on one type, fixed-shape moving regions, described in Section \ref{section:fixed_shape_regions}.
 
-The next part concerns the implementation of fixed-shape moving regions into MobilityDB. The representation of moving regions will be discussed, as well as a set of operations that can be applied on this type. The main goal of the thesis is to have a working implementation of a specific type of moving region in MobilityDB, with a large set of functions implemented that can be used to process this data type. Implementation challenges, and their solutions, will be discussed for all implemented functions, and functions that remain unimplemented due to unsolved challenges will also be listed and described.
+The next part concerns the implementation of fixed-shape moving regions into MobilityDB. The representation of moving regions will be discussed in Section \ref{section:internal_repr}, as well as a set of functions and operators that can be applied on this type in Sections \ref{section:utility_rtransform}, \ref{section:general_functions} and \ref{section:internal_functions}. The main goal of the thesis is to have a working implementation of a specific type of moving region in MobilityDB, with a large set of functions implemented that can be used to process this data type. Implementation challenges and their solutions will be discussed for all implemented functions, and functions that remain unimplemented due to unsolved challenges will also be listed and described.
 
-As a last step, this thesis will expand on the previously implemented types and functions, by providing ideas and algorithms to later be able to extend the system to handle a wider set of moving regions. The objective of this part is thus to already think about possible improvements to the systems, and define future work that could be done to be able to use the system with a wider set of moving regions, such as deforming or even three dimensional regions.
+As a last step, this thesis will expand on the previously implemented types and functions, by providing ideas and algorithms to later be able to extend the system to handle a wider set of moving regions. The objective of this part is thus to already think about possible improvements to the systems, and define future work that could be done to be able to use the system with a wider set of moving regions, such as deforming (Section \ref{section:deforming}) or even three dimensional (Section \ref{section:3d_regions}) regions.
+
+Section \ref{section:summary} will then summarize the contents and contributions of this thesis.
+
+\section{Contributions}
+
+The contribution of this master thesis can be listed as follows:
+
+\begin{itemize}
+    \item Describe the state of the current research about moving regions in moving object databases, and discuss advantages and disadvantages of the different proposed models.
+    \item Develop a model for moving regions of fixed shape adapted from previous research, and implement this model in practice as a new temporal type in MobiltiyDB.
+    \item List and describe a set of SQL functions that can be applied on this new temporal type.
+    \item Research, implement and describe multiple complex algortihms that are used in the current implementation of certain functions, or could be used in future work.
+\end{itemize}
 
 \section{Terms and Notations}
 
-To make sure that there is no confusion or ambiguity, this section will define the terms and notations used in the rest of the thesis. Most of the terms will resemble the names already present in MobilityDB, since this is the primary system that will be worked on during this thesis.
+To make sure that there is no confusion or ambiguity, this section will define the terms and notations used in the rest of the thesis. Most of the terms will resemble the names already present in MobilityDB, since this is the primary system that will be worked on.
 
 \begin{itemize}
     \item This master thesis will mainly work on moving regions. A static region will be represented by the PostGIS Polygon type. For this reason, the terms \textit{region} and \textit{polygon} will be used interchangeably throughout this thesis.
 
-    \item Moving regions can be categorized into \textit{deforming} regions and \textit{non-deforming} regions. The first paper \cite{fmregion} making this distinction uses the term \textit{fixed-shape} to denote these non-deforming regions. Based on this paper, other authors \cite{modeling_and_representing,polyhedra} also started to use this terminology, and we will thus do the same.
+    \item Moving regions can be categorized into \textit{deforming} regions and \textit{non-deforming} regions. The first paper \cite{fmregion} making this distinction uses the term \textit{fixed-shape} to denote these non-deforming regions. Based on this paper, other authors \cite{modeling_and_representing, polyhedra} also started to use this terminology, and we will thus do the same.
 
     \item Most research papers use the notation \textit{mbool}, \textit{mfloat}, ..., when talking about moving objects of respectively boolean or float base types. However, the notation in MobilityDB is different. There, moving objects are stored using \textit{temporal types}, and these types use a notation starting with a \textit{t}, followed by the base type. The two previous types thus become \textit{tbool} and \textit{tfloat}. This is the notation that will be used throughout this thesis.
 

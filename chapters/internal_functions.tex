@@ -1,6 +1,6 @@
 %!TEX root = ../main.tex
 
-\newpage
+\clearpage
 
 \section{Interesting Internal Functions}
 \label{section:internal_functions}
@@ -14,13 +14,24 @@ One implementation issue that arises when handling temporal regions instead of p
     
 When computing the bounding box of a moving region of instant set duration, the same method as for the other moving objects can be applied, i.e.: the bounding box of each instant is computed (for regions, this is done using a PostGIS function), and the resulting bounding box is simply the smallest box containing all the bounding boxes of the instants. Since sequences of regions already have their bounding boxes precomputed, the same technique can be applied to moving regions of sequence set duration: the resulting bounding box is the smallest box containing all the bounding boxes of the sequences.
 
-\note{Example of bounding box of instant set}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/tgeometryi_bbox.pdf}
+    \caption{Bounding box of a tgeometryi}
+    \label{fig:tgeometryi_bbox}
+\end{figure}
+
 
 The last case that needs to be handled is the computation of the bounding box of a moving region of sequence duration. Applying the same method as for regions of instant set duration does not work anymore, since the vertices of the regions do not move linearly when the region is rotating. This means that some vertices will go outside the smallest bounding box containing both the start and end regions. A trivial example is when a square rotates 90 degrees without translating. The bounding box containing its start and end vertices will just be the square itself, but the corners of the square clearly exited this bounding box during the rotation. 
 
-A more advanced example can be seen below.
+A more advanced example can be seen in Figure \ref{fig:naive_bbox_error}, where the bounding box is shown in blue, and the path traversed by the moving region is shown in green. We can clearly see that the moving region goes outside this naively computed bounding box.
 
-\note{Example of error when computing the naive bounding box}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.75\textwidth]{images/naive_bbox_error.pdf}
+    \caption{Error when computing the bounding box of a tgeometryseq}
+    \label{fig:naive_bbox_error}
+\end{figure}
 
 To solve this issue, we imagined two possible alternatives. First of all, if the traversed area (see \ref{section:traversed_area}) of the temporal region is known, we can just take the bounding box of this area, which will be indeed the minimal bounding box containing the moving region completely. However, since computing this traversed area is a computationally heavy operation, we propose another method that computed a bounding box in a more efficient way. This solution produces a correct but non-optimal bounding box. The bounding box is correct, because the region will never exit this box during its movement, but non-optimal, because it will usually not be the smallest bounding box that can be found. These assumptions are still sufficient for the bounding box to be used for multiple purposes, so this solution has been implemented in MobilityDB.
 
@@ -34,7 +45,18 @@ To compute this bounding box for sequences, a similar procedure as for instance 
     \item (optional) Also return $d_{max}$ to be used for the following instants, since this value does not change if the region and the rotation center of the region stay the same. If this is done, we can skip step 1 and 2 when computing the next rotating bounding boxes.
 \end{enumerate}
 
-\note{Maybe visualization of the algorithm}
+\begin{figure}[h!]
+    \centering
+    \begin{tikzpicture}[scale=0.85]
+        \draw (-1, 1) -- (1, 1) -- (1, -1) -- (3, 3) -- cycle;
+        \filldraw (4/3, 4/3) circle[radius=1.5 pt] node[anchor=south east] {C};
+        \draw[red, dashed] (4/3, 4/3) -- (3, 3) node[anchor=west] {$d_{max} = \frac{5\sqrt{2}}{3}$};
+        \draw[red, dashed] (4/3, 4/3) circle (2.357);
+        \draw[blue] (4/3 - 2.357, 4/3 - 2.357) -- (4/3 - 2.357, 4/3 + 2.357) -- (4/3 + 2.357, 4/3 + 2.357) -- (4/3 + 2.357, 4/3 - 2.357) --cycle;
+    \end{tikzpicture}
+    \caption{Rotating bounding box around a region}
+    \label{fig:rotating_bbox}
+\end{figure}
 
 This algorithm will return a bounding box which completely contains the given region, independently of any rotation applied to it around its rotation center. After computing the bounding boxes of all the instants, the resulting bounding box will simply be the smallest box containing all the bounding boxes of the instants. Depending on the temporal geometry, this bounding box will be close or far from the optimal bounding box. If the polygon representing the region is relatively 'round', and the region rotates quickly, this bounding box will be actually quite accurate. If, however, the region is long but thin and does not rotate a lot, the bounding box will be much bigger than the optimal bounding box.
 
@@ -43,7 +65,7 @@ For this reason, this solution for bounding boxes might not be usable for some f
 \subsection{Normalization}
 \label{section:normalization}
 
-When comparing moving objects, it is important to have identical objects being represented in the same way to allow for an efficient comparison process. This will be done by applying a normalization process on the given moving objects. Every sequence or sequence set that represents the same moving object will thus have the same internal representation after normalization. This normalization process is applied when creating a new moving object from an input or when merging multiple objects together (ex. when combining two sequences of the same region). During normalization, redundant instants that could be recomputed by interpolating between two other instants are removed. For instants and instant sets, there is no normalization process, since we do not assume any interpolation process between instants, and thus we cannot have redundant instants. A simple example with a moving point is shown below to visualize the concept of normalization.
+When comparing moving objects, it is important to have identical objects being represented in the same way to allow for an efficient comparison process. This will be done by applying a normalization process on the given moving objects. Every sequence or sequence set that represents the same moving object will thus have the same internal representation after normalization. This normalization process is applied when creating a new moving object from an input or when merging multiple objects together (for example, when combining two sequences of the same region). During normalization, redundant instants that could be recomputed by interpolating between two other instants are removed. For instants and instant sets, there is no normalization process, since we do not assume any interpolation process between instants, and thus we cannot have redundant instants. A simple example with a moving point is shown below to visualize the concept of normalization.
     
 \note{Example of normalization with a moving point}
 
@@ -76,6 +98,8 @@ This dummy region has to be well-defined, so that every possible input represent
 This definition produces a minimal amount of dummy regions, while still being able to recreate the initial movement of the region correctly. This method also produces unique representations and is thus a good way to normalize moving regions. This is the solution that has been chosen to implement in MobilityDB.
 
 Theoretically, since the transformation that is stored for this dummy region is partially redundant, we could replace it with a single value representing the direction of rotation, or the intermediate angle. This is in principle feasible to reduce storage space even more, but that would mean that we need to handle a third kind of object, which is not the best idea when we want to implement clean code. 
+
+In practice, detecting if an instant is redundant or should be replaced by a dummy instant is done using the \textit{interpolate} and \textit{interpolate long} functions described in Section \ref{section:utility_rtransform}. If the current instant can be computed with the \textit{interpolate} function using the previous an next instants as input, then the instant is redundant and can be removed. However, if the instant can be computed with the \textit{interpolate long} function instead of \textit{interpolate}, then it means that the instant has to be replaced by a dummy instant.
 
 \subsection{Standalone Instant}
 \label{section:standalone_inst}

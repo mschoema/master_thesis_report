@@ -1,28 +1,29 @@
 %!TEX root = ../main.tex
+\label{section:moving_regions}
 
 Real world examples of moving regions are everywhere. The movement of a car can be represented by a moving rectangle, forest fires, pollution areas and glacier extents can be represented by regions whose boundaries change over time, etc. Difficulties arise when we want to store and query these moving regions efficiently using moving object databases. Multiple different models have already been developed \cite{fmregion,polyhedra,model_structure_for_mod}, each one with positives and negatives. Most of these models make certain assumptions on the type of moving region or on the transformation that they undergo.
 
-The literature makes a distinction between two major types of moving regions: deformable regions, analyzed and described by multiple authors \cite{polyhedra,model_structure_for_mod,moving_obj_foundation,}, and fixed-shape regions, described in \cite{fmregion}. Another distinction that can be made is the difference between 2D and 3D regions. 
+The literature makes a distinction between two major types of moving regions: deforming regions, analyzed and described by multiple authors \cite{polyhedra,model_structure_for_mod,moving_obj_foundation}, and fixed-shape regions, described in \cite{fmregion}. Another distinction that can be made is the difference between 2D and 3D regions. 
 
 We will first discuss the difference between deforming and fixed-shape moving regions in the 2D case, and then briefly discuss 3D regions.
 
-\section{Deformable Moving Regions}
-\label{section:deformable_regions}
+\section{Deforming Moving Regions}
+\label{section:deforming_regions}
 
-Deformable moving regions form a subset of the moving regions, and can be used in a large set of real-world application, such as the monitoring of forest fires, oil leaks in the ocean, flocks of birds, and many more. Depending on the application, these regions change in discrete steps, or continuously over time. 
+Deforming moving regions form a subset of the moving regions, and can be used in a large set of real-world application, such as the monitoring of forest fires, oil leaks in the ocean, flocks of birds, and many more. Depending on the application, these regions change in discrete steps, or continuously over time. 
 
 When the regions change in discrete time steps, the major issue is the storage space, but there are no real other challenges, since the region is well-defined at every instant (using stepwise interpolation), and the usual spatial functions can be easily generalized to moving regions.
 
-An example of a use case where a deformable moving region changes in discrete time steps is a cadastre. This type of moving regions is briefly discussed in Section \ref{section:deformable}. \\
+An example of a use case where a deforming moving region changes in discrete time steps is a cadastre. This type of moving regions is briefly discussed in Section \ref{section:deforming}. \\
 
 When the regions are changing in a continuous manner, however, this stepwise interpolation method cannot be used anymore and a new interpolation method has to be defined. Next to this interpolation method, a storage model that allows to efficiently compute these interpolations has to be described as well. Since the start and end region might look very different, an additional difficulty arises when we want to construct the moving region from a set of snapshots. Indeed, the start and end regions can have a different number of vertices, and even a different number of faces if the region splits or merges.
 
-\cite{algos_for_mod,model_structure_for_mod} all describe a \textit{sliced representation} (in the time axis) of the moving region, which defines a transformation from a start to an end region. \cite{repr_from_obs} also provides a way to create this sliced representation starting from snapshots of the moving region.
+The most common model used to represent a deforming moving region uses a \textit{sliced representation} \cite{algos_for_mod,model_structure_for_mod} (in the time axis) of the moving region, which defines a transformation from a start to an end region. There exist also ways of creating this sliced representation starting from snapshots of the moving region \cite{repr_from_obs}.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.75\textwidth]{images/sliced_moving_region.png}
-    \caption{A sliced representation of moving regions \cite{polyhedra}}
+    \caption[Sliced representation of moving regions]{Sliced representation of moving regions \cite{polyhedra}}
     \label{fig:sliced_repr_polygons}
 \end{figure}
 
@@ -31,19 +32,19 @@ This slices representation of a moving regions makes use of \textit{moving segme
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.75\textwidth]{images/sliced_moving_segments.png}
-    \caption{Sliced representation of moving segments, with rotating segments being represented using 2 distinct moving segments. \cite{polyhedra}}
+    \caption[Sliced representation of moving segments]{Sliced representation of moving segments, with rotating segments being represented using 2 distinct moving segments. \cite{polyhedra}}
     \label{fig:sliced_repr_segments}
 \end{figure}
 
 
-To describe the complete movement of a moving region or apply operations on these regions, many of these slices are needed, and this causes storage and efficiency issues. To solve this problem, \cite{polyhedra} described a polyhedra-based model, which uses the same moving segments as previously, but computes the operations more efficiently by using the temporal dimension as a third dimension, and using 3D geometry to compute the operations. As a result, less slices are created than in the previous implementations.
+To describe the complete movement of a moving region or apply operations on these regions, many of these slices are needed, and this causes storage and efficiency issues. To solve this problem, a polyhedra-based model is described in \cite{polyhedra}, which uses the same moving segments as previously, but computes the operations more efficiently by using the temporal dimension as a third dimension, and using 3D geometry to compute the operations. As a result, less slices are created than in the previous implementations.
 
 \section{Fixed-shape Moving Regions}
 \label{section:fixed_shape_regions}
 
 Fixed-shape moving regions form another subset of all moving regions, and can be used to represent any moving rigid body, such a cars, boats, planes, etc. When the spatial extent of the object is negligible, and the orientation of no importance, the movement of such a body is usually represented by a moving point. When these conditions are not met, however, the movement of the region as a whole has to be analyzed.
 
-The movement of fixed-shape regions can be described much easier than the movement of a deformable region, since the only possible transformations are translations and rotations. Theoretically, scaling could be taken into account too, but this case does not seem to have any real-world use case, so it is omitted.
+The movement of fixed-shape regions can be described much easier than the movement of a deforming region, since the only possible transformations are translations and rotations. Theoretically, scaling could be taken into account too, but this case does not seem to have any real-world use case, so it is omitted.
 
 Again, if the region moves in discrete time steps, the technical challenge only concerns the storage space, and here this can be efficiently resolved by storing the moving region as a polygon followed by a list of transformations. This technique is also used when handling continuous movement of regions, and is described below.
 
@@ -52,22 +53,22 @@ When we manage continuous moving regions, we again have to find a way to compute
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.75\textwidth]{images/vertices_interpolation.png}
-    \caption{Interpolation of moving regions using linear interpolation between the vertices. \cite{fmregion}}
+    \caption[Linear interpolation of the vertices of a moving region]{Interpolation of a moving region using linear interpolation between the vertices. \cite{fmregion}}
     \label{fig:vertices_interpolation}
 \end{figure}
 
 
-The reason for this is that the interpolation method does not use the assumptions made on the possible transformations of the polygon. \cite{fmregion} realized this and proposed a model to store the region as a sequence of transformations, and make use of these transformations to compute the correct interpolation. The resulting fixed-shape moving region is called \textit{fmregion} in this paper, and an example of a desired interpolation for this type of region is seen in Figure \ref{fig:fixed_shape_interpolation}.
+The reason for this is that the interpolation method does not use the assumptions made on the possible transformations of the polygon. To solve this, a new model is proposed in \cite{fmregion}, which stores the region as a sequence of transformations, and makes use of these transformations to compute the correct interpolation. The resulting fixed-shape moving region is called \textit{fmregion} in this paper, and an example of a desired interpolation for this type of region is seen in Figure \ref{fig:fixed_shape_interpolation}.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.75\textwidth]{images/fixed_shape_interpolation.png}
-    \caption{Interpolation of moving regions using the fixed-shape assumptions. \cite{fmregion}}
+    \caption[Linear interpolation of a fixed-shape moving region]{Interpolation of a moving region using the fixed-shape assumptions. \cite{fmregion}}
     \label{fig:fixed_shape_interpolation}
 \end{figure}
 
 
-\cite{fmregion} defines a \textit{transformationunit}, which specifies a rotation center $C$, an initial translation vector $v_0$ and rotation angle $\theta_0$, the vector $v$ and angle $\theta$ representing the transformation, as well as a time interval $[t_s; t_e]$, specifying the start and end instant of the transformation.
+The model makes use of a \textit{transformationunit}, which specifies a rotation center $C$, an initial translation vector $v_0$ and rotation angle $\theta_0$, the vector $v$ and angle $\theta$ representing the transformation, as well as a time interval $[t_s; t_e]$, specifying the start and end instant of the transformation.
 
 \[
     \text{transformationunit } \mathcal{T}: (C, v_0, v, \theta_0, \theta, t_{s}, t_{e})
@@ -83,19 +84,19 @@ When computing the position of the region at a moment between the start and end 
 
 Note that the previous definition allows the region to rotate around an arbitrary rotation center for each transformation unit. This particularity allows the moving region to change rotation center between two transformation units, which is useful to describe a larger amount of trajectories than if the rotation center was fixed for all transformations. On the other hand, this also requires the user to input the rotation center for each transformation, since this cannot be uniquely computed by just seeing the start and end position of the region.
 
-\cite{fmregion} also describes a few useful algorithms to process moving regions, such as a \textit{traversed area} function, which computes the union of all places that the region went through during its movement.
+The same paper \cite{fmregion} also describes a few useful algorithms to process moving regions, such as a \textit{traversed area} function, which computes the union of all places that the region went through during its movement.
 
 \section{3D Moving Regions}
 \label{section:3d_regions_intro}
 
-The research articles presented in the two previous sections only focused on moving regions in two dimensions, but of course we might wonder if 3D moving regions could also be manipulated in a similar manner. Only 3D moving regions of fixed shape fixed-shape will be discussed here. To even just discuss about 3D deformable moving regions would require a much larger amount of research.
+The research articles presented in the two previous sections only focused on moving regions in two dimensions, but of course we might wonder if 3D moving regions could also be manipulated in a similar manner. Only 3D moving regions of fixed shape fixed-shape will be discussed here. To even just discuss about 3D deforming moving regions would require a much larger amount of research.
 
 First of all, it is important to define what we call a 3D region. There is indeed a considerable difference between 3D polygons (polygons with points embedded in 3D space) and 3D polyhedra (3D volumetric objects). In the following, we will define a 3D region as a volumetric geometry, thus representable by a 3D polyhedron.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.75\textwidth]{images/plane_polyhedron.png}
-    \caption{Representation of a plane using a 3D polyhedron \cite{3d_polyhedron}}
+    \caption[Representation of a plane using a 3D polyhedron]{Representation of a plane using a 3D polyhedron \cite{3d_polyhedron}}
     \label{fig:polyhedron}
 \end{figure}
 

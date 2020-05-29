@@ -84,8 +84,8 @@ Multiple rotations can be combined together into a single one by combining the c
 
 , which indeed correspond to first applying \( q_1 \) to \( p \) and then applying \( q_2 \) to the previous result.
 
-The efficiency of using quaternions instead of rotation matrices or axis-angle representations can be debated, but the main advantage of using these rotation quaternions is that we can easily apply a spherical linear interpolation (\textit{slerp}) to them. This is necessary to correctly interpolate between two 3d rotations, which is needed for the 3d version of the \textit{interpolate} function described in Section \ref{section:interpolate}. To use the resulting quaternion to effectively rotate a polygon can be done by either first transforming all polygon vertices to a quaternion representation and then using quaternion multiplication, or by representing the resulting rotation quaternion in another way, for example using a rotation matrix, and then applying this rotation matrix to the polygon. Transformations from rotation quaternion to other rotation representations are presented in \cite{ISO19141_moving_features}, and the equations have also been added in Annex \note{TODO: write annex and add ref to annex}.
-    
+The efficiency of using quaternions instead of rotation matrices or axis-angle representations can be debated, but the main advantage of using these rotation quaternions is that we can easily apply a spherical linear interpolation (\textit{slerp}) to them. This is necessary to correctly interpolate between two 3d rotations, which is needed for the 3d version of the \textit{interpolate} function described in Section \ref{section:interpolate}. To use the resulting quaternion to effectively rotate a polygon can be done by either first transforming all polygon vertices to a quaternion representation and then using quaternion multiplication, or by representing the resulting rotation quaternion in another way, for example using a rotation matrix, and then applying this rotation matrix to the polygon.
+
 \subsubsection{Interpolating 2d and 3d rotations using Quaternions}
 
 Now that rotation quaternions have been presented as a method used to represent 3d rotations, let's look at how we can compute an interpolation between two rotations. An example of the interpolation of two 3d rotations can be seen in Figure \ref{fig:3d_interpolation}. The computations can be done relatively easily using quaternions, and corresponds to a spherical linear interpolation (\textit{slerp}) in 3d.
@@ -102,7 +102,7 @@ Now that rotation quaternions have been presented as a method used to represent 
   \includegraphics[width=.4\linewidth]{images/3d_interpolated_rotation.png}
   \caption{Interpolated rotation}
 \end{subfigure}
-\caption{3D interpolation of rotations \cite{ISO19141_moving_features}}
+\caption[Interpolation of rotations in 3D]{Interpolation of rotations in 3D \cite{ISO19141_moving_features}}
 \label{fig:3d_interpolation}
 \end{figure}
 

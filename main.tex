@@ -1,15 +1,24 @@
-\documentclass[12pt, twoside]{report}
+\documentclass[11pt, twoside]{report}
 
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage[a4paper,width=150mm,top=25mm,bottom=25mm,bindingoffset=6mm]{geometry}
 \usepackage{caption}
+\usepackage{cite}
 \usepackage{subcaption}
+\usepackage[colorlinks,urlcolor=blue,linkcolor=blue,citecolor=blue]{hyperref}
 \usepackage{color}
 \usepackage{tikz}
+\usepackage{fancyvrb}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage[noend]{algpseudocode}
+\usepackage{lscape}
+\usepackage{afterpage}
+\usepackage{xcolor}
+\definecolor{cverbbg}{gray}{0.95}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily\small, flexiblecolumns, backgroundcolor=\color{cverbbg}, breaklines, escapechar=\\}
 
 \usepackage{lipsum} 
 
@@ -31,9 +40,6 @@
 \fancyfoot[LE,RO]{\thepage}
 \fancyfoot[LO,CE]{Chapter \thechapter}
 \fancyfoot[CO,RE]{Author Name}
-
-\usepackage[backend=bibtex]{biblatex}  
-\addbibresource{references.bib}
 
 \newcommand{\note}[1]{\textcolor{red}{[#1]}}
 \newcommand{\eqtab}{\;\;\;\;\;\;}
@@ -91,21 +97,17 @@
 \chapter{Future Work}
 \input{chapters/tgeography_and_tgeompoint}
 \input{chapters/3d_regions}
-\input{chapters/deformable_regions}
+\input{chapters/deforming_regions}
  
-\chapter{Conclusion}
-\input{chapters/conclusion}
+\chapter{Summary}
+\input{chapters/summary}
+
+\bibliographystyle{ieeetr}
+\bibliography{references}
 
 \appendix
 
 \chapter{Complete List of Transformation Functions}
 \input{appendices/complete_funct_tables}
-
-\chapter{Conversions Between 3D Rotation Representations}
-\input{appendices/rot_repr_conversions}
-
-\nocite{*}
-\printbibliography
-\note{Check copyright for ISO reference!}
 
 \end{document}

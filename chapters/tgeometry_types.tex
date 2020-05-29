@@ -7,9 +7,9 @@ The previous section describes two different approaches to handle moving regions
 
 The choice was made to focus on implementing a model for manipulating moving regions of fixed-shape, based on the model presented in \cite{fmregion} and described previously. This decision was mostly arbitrary, based on personal preference, but not only. 
 
-MobilityDB already has an underlying structure for the new data types, and this structure has to be preserved as much as possible when implementing a new feature, and this was also a factor in the final decision. The deformable region model uses a \textit{sliced representation} of the movement, whereas MobilityDB uses a \textit{sequence representation} described in \cite{mobilitydb}, so the model would have to be heavily adapted to conform to the MobilityDB structure. Using a sequence representation for storing fixed-shape moving regions seems much more straight forward.
+MobilityDB already has an underlying structure for the new data types, and this structure has to be preserved as much as possible when implementing a new feature, and this was also a factor in the final decision. The deforming region model uses a \textit{sliced representation} of the movement, whereas MobilityDB uses a \textit{sequence representation} described in \cite{mobilitydb}, so the model would have to be heavily adapted to conform to the MobilityDB structure. Using a sequence representation for storing fixed-shape moving regions seems much more straight forward.
 
-For the rest of the thesis, we can thus assume that we are always talking about regions of fixed-shape, except if explicitly mentioned that we talk about deformable regions.
+For the rest of the thesis, we can thus assume that we are always talking about regions of fixed-shape, except if explicitly mentioned that we talk about deforming regions.
 
 \section{Representation of Fixed-Shape Moving Regions in MobilityDB}
 \label{section:internal_repr}
@@ -101,11 +101,42 @@ The algorithmic challenges for this data type are the same as for tgeomtryi, wit
 
 One last unsolved problem is the fact that the interpolated path does not exactly follow the real path taken by the moving region, when the real rotation center of the moving region is not its centroid. Solving this issue algorithmically would require us to know the real path taken by the moving region and thus the real rotation center, which, as we explained previously, is not possible when we only get snapshots of the region at distinct instants. 
 
-The only solution to this problem without changing the assumptions made, is to give as much snapshots of the region in the input as needed to minimize the difference between interpolated path and the real path. Indeed, we can achieve any arbitrary precision by increasing the amount of instants given in the input between the initial and final position of the region. An example of how giving more instants can increase the precision of the interpolation is shown in figure \note{ref to figure}. \\
+The only solution to this problem without changing the assumptions made, is to give as much snapshots of the region in the input as needed to minimize the difference between interpolated path and the real path. Indeed, we can achieve any arbitrary precision by increasing the amount of instants given in the input between the initial and final position of the region. An example of how giving more instants can increase the precision of the interpolation is shown in Figure \ref{fig:num_instants_importance}. \\
 
-\note{Image of better interpolation when using more instants (3 images, 1 with real movement, 1 with only start and end instant, 1 with more instants)}
+\begin{figure}[h!]
+\centering
+\begin{subfigure}{.475\textwidth}
+  \centering
+  \includegraphics[width=\textwidth]{images/path_real.png}
+  \caption{Real path}
+  \label{fig:real_path}
+\end{subfigure}
+\hfill
+\begin{subfigure}{.475\textwidth}
+  \centering
+  \includegraphics[width=\textwidth]{images/path_no_instants.png}
+  \caption{Only start and end instant given}
+  \label{fig:no_insts_path}
+\end{subfigure}
+\vskip\baselineskip
+\begin{subfigure}{.475\textwidth}
+  \centering
+  \includegraphics[width=\textwidth]{images/path_some_instants.png}
+  \caption{Two intermediate instants given}
+  \label{fig:some_insts_path}
+\end{subfigure}
+\hfill
+\begin{subfigure}{.475\textwidth}
+  \centering
+  \includegraphics[width=\textwidth]{images/path_all_instants.png}
+  \caption{Five intermediate instants given}
+  \label{fig:all_insts_path}
+\end{subfigure}
+\caption[Computing the path of a moving region]{Computing the path of a moving region defined using different number of instants}
+\label{fig:num_instants_importance}
+\end{figure}
 
-Here we have a square rotating around a stationary point $(0,\ 0)$. Given only the start and end instant (in red) of the square, the interpolation using the centroid as rotation center would be quite far from the real path taken by the square. Given a few more instants (in blue), the difference between the interpolated path and the real path decreases.
+Figure \ref{fig:real_path} displays the real path (in blue) taken by a moving region (in green). Given only the start and end instants (in green) (Figure \ref{fig:no_insts_path}), the computed path is quite far from the reality. This computed path improves as more intermediate instants (in green) are given. The blue path shown in the figures above is computed using the traversed area function described in Section \ref{section:traversed_area}.
 
 \subsection{TgeometryS}
 \label{section:internal_repr_s}

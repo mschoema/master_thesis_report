@@ -1,53 +1,68 @@
 %!TEX root = ../main.tex
 \label{appendix:complete_funct_tables}
 
-\section{Accessors}
+\begin{table}[htbp]
+\begin{subtable}{1\textwidth}
+\centering
+    \begin{tabularx}{\textwidth}{|l|X|}
+        \hline
+        \textbf{Function}   & \textbf{Signature} \\ 
+        \hline
+        duration            & tgeometry $\rightarrow$ text\\
+        \hline
+        interpolation       & tgeometry $\rightarrow$ text\\
+        \hline
+        memSize             & tgeometry $\rightarrow$ integer \\
+        \hline
+        getValue            & tgeometry(Instant) $\rightarrow$ geometry(Polygon) \\
+        \hline
+        startValue          & tgeometry $\rightarrow$ geometry(Polygon) \\
+        \hline
+        endValue            & tgeometry $\rightarrow$ geometry(Polygon) \\
+        \hline
+        getTimestamp        & tgeometry(Instant) $\rightarrow$ timestamptz \\
+        \hline
+        getTime             & tgeometry $\rightarrow$ periodset \\
+        \hline
+        timespan            & tgeometry $\rightarrow$ interval \\
+        \hline
+        shift               & tgeometry $\rightarrow$ tgeometry \\
+        \hline
+        numInstants         & tgeometry $\rightarrow$ integer \\
+        \hline
+        startInstant        & tgeometry $\rightarrow$ tgeometry(Instant) \\
+        \hline
+        endInstant          & tgeometry $\rightarrow$ tgeometry(Instant) \\
+        \hline
+        instantN            & tgeometry x integer $\rightarrow$ tgeometry(Instant) \\
+        \hline
+        instants            & tgeometry $\rightarrow$ array tgeometry(Instant) \\
+        \hline
+        numTimestamps       & tgeometry $\rightarrow$ integer \\
+        \hline
+        startTimestamp      & tgeometry $\rightarrow$ timestamptz \\
+        \hline
+        endTimestamp        & tgeometry $\rightarrow$ timestamptz \\
+        \hline
+        timestampN          & tgeometry x integer $\rightarrow$ timestamptz \\
+        \hline
+        timestamps          & tgeometry $\rightarrow$ array timestamptz \\
+        \hline
+        \end{tabularx}
+\end{subtable}
+\caption{Transformation functions}
+\label{table:transformation_funcs_complete}
+\end{table}
 
-\begin{table}[h!]
-    \centering
+\clearpage
+
+\begin{table}[htbp]
+\ContinuedFloat
+\begin{subtable}{1\textwidth}
+\centering
     \begin{tabularx}{\textwidth}{|l|X|}
     \hline
     \textbf{Function}   & \textbf{Signature} \\ 
-    \hline
-    duration            & tgeometry $\rightarrow$ text\\
-    \hline
-    interpolation       & tgeometry $\rightarrow$ text\\
-    \hline
-    memSize             & tgeometry $\rightarrow$ integer \\
-    \hline
-    getValue            & tgeometry(Instant) $\rightarrow$ geometry(Polygon) \\
-    \hline
-    startValue          & tgeometry $\rightarrow$ geometry(Polygon) \\
-    \hline
-    endValue            & tgeometry $\rightarrow$ geometry(Polygon) \\
-    \hline
-    getTimestamp        & tgeometry(Instant) $\rightarrow$ timestamptz \\
-    \hline
-    getTime             & tgeometry $\rightarrow$ periodset \\
-    \hline
-    timespan            & tgeometry $\rightarrow$ interval \\
-    \hline
-    shift               & tgeometry $\rightarrow$ tgeometry \\
-    \hline
-    numInstants         & tgeometry $\rightarrow$ integer \\
-    \hline
-    startInstant        & tgeometry $\rightarrow$ tgeometry(Instant) \\
-    \hline
-    endInstant          & tgeometry $\rightarrow$ tgeometry(Instant) \\
-    \hline
-    instantN            & tgeometry x integer $\rightarrow$ tgeometry(Instant) \\
-    \hline
-    instants            & tgeometry $\rightarrow$ array tgeometry(Instant) \\
-    \hline
-    numTimestamps       & tgeometry $\rightarrow$ integer \\
-    \hline
-    startTimestamp      & tgeometry $\rightarrow$ timestamptz \\
-    \hline
-    endTimestamp        & tgeometry $\rightarrow$ timestamptz \\
-    \hline
-    timestampN          & tgeometry x integer $\rightarrow$ timestamptz \\
-    \hline
-    timestamps          & tgeometry $\rightarrow$ array timestamptz \\
     \hline
     numSequences        & tgeometry $\rightarrow$ integer \\
     \hline
@@ -60,6 +75,6 @@
     Sequences           & tgeometry $\rightarrow$ array tgeometry(Sequence) \\
     \hline
     \end{tabularx}
-    \caption{Transformation functions}
-    \label{table:transformation_funcs_complete}
+\end{subtable}
+\caption{Transformation functions, continued}
 \end{table}

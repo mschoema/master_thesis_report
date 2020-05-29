@@ -25,26 +25,30 @@ These functions can be called utility functions, since they are not presented to
     diff                & rtransform x rtransform           $\rightarrow$ rtransform \\
     \hline
     \end{tabular}
-    \caption{Utility functions for \textit{rtransform} type}
+    \caption{Utility functions for the \textit{rtransform} type}
     \label{table:rtransform_functions}
 \end{table}
 
 \subsection{Compute}
 \label{section:compute}
 
-The \textit{compute} function takes two polygon values as input and computes the transformation from the first to the second one. For example, taking the two polygons shown below as input, with the red polygon being the first argument and the blue polygon being the second, the resulting rtransform will be $\mathcal{T}:\ ()$ \note{fill in correct rtransform}.
+The \textit{compute} function takes two polygon values as input and computes the transformation from the first to the second one. For example, taking the two polygons shown below as input, with the blue polygon being the first argument and the red polygon being the second, the resulting rtransform will be $\mathcal{T}:\ (1,\ \frac{1}{3},\ \frac{-\pi}{2})$.
 
-\note{Image of a red and blue polygon}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.6\textwidth]{images/example_simple_transformation.png}
+    \caption{Example polygons used in the \textit{compute} function}
+    \label{fig:example_compute}
+\end{figure}
+
 
 As said previously the type used to represent a region value is the PostGIS type \textit{Geometry(Polygon)}. This polygon type is defined using rings: one outer ring, and zero or more inner rings defining holes in the polygon. One assumption that we make when receiving the polygons as input is that two polygons of the same shape have their corresponding points defined at the same position in the rings of said polygons. 
 
 The rings are defined as lists of points, with the first and the last points being equal to denote that the ring is closed. Our previous assumption thus says that the $i$'th point in the list defining the outer ring of the first polygon, has to correspond to the $i$'th point in the list defining the outer ring of the second polygon, after application of the correct transformation.
 
-Essentially this means that the points of the polygons are 'numbered' in the same way. This allows us for example to distinguish a square from its 90 degree rotations.
+Essentially this means that the points of the polygons are 'numbered' in the same way. This allows us for example to distinguish a square from its 90 degree rotations. \\
 
-\note{Image of a square with corners numbered as '1-2-3-4' and '2*-3*-4*-1*', to show that we cannot distinguish the two squared without their numbering}
-
-We can describe the combination of a rotation by $\theta$ around the origin, followed by a translation by $(v^x,\ v^y)$, using a matrix multiplication.
+The combination of a rotation by $\theta$ around the origin, followed by a translation by $(v^x,\ v^y)$, can be described using a matrix multiplication.
 
 \[
     \begin{bmatrix}
@@ -156,25 +160,155 @@ Since we assume linear interpolation between the rtransform values, we will simp
 
 The interpolation of the angle of rotation on the other hand is slightly more complicated. We are still interpolating linearly, but we have to take into account that the angles $-\pi$ and $\pi$ correspond to the same rotation. This means that there are always two possibilities for the interpolation. Either go directly from $\theta_1$ to $\theta_2$ or go from $\theta_1$ to $-\pi$ (if $\theta_1 < \theta_2$) and then from $\pi$ to $\theta_2$. Both are valid interpolations, but one is shorter than the other. The shorter option is the option that will be taken for the interpolation of the angles.
 
-\note{Image of linear axis for the angles and the 2 ways of interpolating}
+% xtick={-3.14159, -1.5708, -0.5, 0, 1.5708, 2.5, 3.14159},
+% xticklabels={$-\pi$, $-\frac{\pi}{2}$, $\theta_1$, $0$, $\frac{\pi}{2}$, $\theta_2$, $\pi$},
+
+\begin{figure}[h!]
+\centering
+\vspace{.5 cm}
+\begin{subfigure}[b]{0.475\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \draw[thick] (-3.14159, 0) -- (3.14159, 0);
+    \draw (-3.14159 cm, 2 pt) -- (-3.14159 cm, -2 pt) node[anchor=north] {$-\pi$};
+    \draw (-1.5708 cm, 2 pt) -- (-1.5708 cm, -2 pt) node[anchor=north] {$-\frac{\pi}{2}$};
+    \draw (-0.5 cm, 2 pt) -- (-0.5 cm, -2 pt) node[anchor=north] {$\theta_1$};
+    \draw (0 cm, 2 pt) -- (0 cm, -2 pt) node[anchor=north] {$0$};
+    \draw (1.5708 cm, 2 pt) -- (1.5708 cm, -2 pt) node[anchor=north] {$\frac{\pi}{2}$};
+    \draw (2.5 cm, 2 pt) -- (2.5 cm, -2 pt) node[anchor=north] {$\theta_2$};
+    \draw (3.14159 cm, 2 pt) -- (3.14159 cm, -2 pt) node[anchor=north] {$\pi$};
+    \draw[line width=0.5 mm, red, ->] (-0.5, 0) -- (2.5, 0);
+    \end{tikzpicture}
+    \caption{Go directly from $\theta_1$ to $\theta_2$}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.475\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \draw[thick] (-3.14159, 0) -- (3.14159, 0);
+    \draw (-3.14159 cm, 2 pt) -- (-3.14159 cm, -2 pt) node[anchor=north] {$-\pi$};
+    \draw (-1.5708 cm, 2 pt) -- (-1.5708 cm, -2 pt) node[anchor=north] {$-\frac{\pi}{2}$};
+    \draw (-0.5 cm, 2 pt) -- (-0.5 cm, -2 pt) node[anchor=north] {$\theta_1$};
+    \draw (0 cm, 2 pt) -- (0 cm, -2 pt) node[anchor=north] {$0$};
+    \draw (1.5708 cm, 2 pt) -- (1.5708 cm, -2 pt) node[anchor=north] {$\frac{\pi}{2}$};
+    \draw (2.5 cm, 2 pt) -- (2.5 cm, -2 pt) node[anchor=north] {$\theta_2$};
+    \draw (3.14159 cm, 2 pt) -- (3.14159 cm, -2 pt) node[anchor=north] {$\pi$};
+    \draw[line width=0.5 mm, red, <-] (-3.14159, 0) -- (-0.5, 0);
+    \draw[line width=0.5 mm, red, <-] (2.5, 0) -- (3.14159, 0);
+    \end{tikzpicture}
+    \caption{Go from $\theta_1$ to $-\pi$, then from $\pi$ to  $\theta_2$}
+\end{subfigure}
+\caption{Interpolation of angles on a linear axis}
+\label{fig:linear_axis}
+\end{figure}
 
 Any angle of rotation of $-\pi < \theta \le \pi$ can be represented by a point on the unit circle at $(\cos(\theta),\ \sin(\theta))$, which means that going from one angle to the other during the interpolation is the same as moving from one point to the other along the arc of the unit circle. The two possible ways of interpolating angles are thus represented by the two arcs connecting the points, one being longer than the other.
 
-\note{Image of unit circle for the interpolation of angles}
+\begin{figure}[h!]
+\centering
+\begin{subfigure}[b]{0.475\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \draw (0,0) circle (1.5 cm);
+    \draw (1.5 cm - 2 pt, 0) -- (1.5 cm + 2 pt, 0) node[anchor=west] {$0$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=south east] {$\pi$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=north east] {$-\pi$};
+    \draw (330:1.5 cm - 2 pt) -- (330:1.5 cm + 2 pt) node[anchor=north west] {$\theta_1$};
+    \draw (110:1.5 cm - 2 pt) -- (110:1.5 cm + 2 pt) node[anchor=south east] {$\theta_2$};
+    \draw[line width=0.5 mm, red, ->] (330:1.5 cm) arc (-30:110:1.5 cm);
+    \end{tikzpicture}
+    \caption{Shorter arc connecting $\theta_1$ and $\theta_2$}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.475\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \draw (0,0) circle (1.5 cm);
+    \draw (1.5 cm - 2 pt, 0) -- (1.5 cm + 2 pt, 0) node[anchor=west] {$0$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=south east] {$\pi$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=north east] {$-\pi$};
+    \draw (330:1.5 cm - 2 pt) -- (330:1.5 cm + 2 pt) node[anchor=north west] {$\theta_1$};
+    \draw (110:1.5 cm - 2 pt) -- (110:1.5 cm + 2 pt) node[anchor=south east] {$\theta_2$};
+    \draw[line width=0.5 mm, red, <-] (110:1.5 cm) arc (110:330:1.5 cm);
+    \end{tikzpicture}
+    \caption{Longer arc connecting $\theta_1$ and $\theta_2$}
+\end{subfigure}
+\caption{Interpolation of angles on the unit circle}
+\label{fig:circular_axis}
+\end{figure}
 
-Using this unit circle representation, we can then visualize four different ways of interpolating two angles depending on the values of the two angles. These four cases are shown in figure \note{link to figure}.
+Using this unit circle representation, we can then visualize four different ways of interpolating two angles depending on the values of the two angles. These four cases are shown in Figure \ref{fig:interpolation_situations}.
 
-\note{figure with 4 cases when interpolating, and an arrow pointing from $\theta_1$ to $\theta_2$ through the smallest arc.}
+\begin{figure}[h!]
+\centering
+\begin{subfigure}[b]{0.475\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \draw (0,0) circle (1.5 cm);
+    \draw (1.5 cm - 2 pt, 0) -- (1.5 cm + 2 pt, 0) node[anchor=west] {$0$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=south east] {$\pi$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=north east] {$-\pi$};
+    \draw (-45:1.5 cm - 2 pt) -- (-45:1.5 cm + 2 pt) node[anchor=north west] {$\theta_1$};
+    \draw (45:1.5 cm - 2 pt) -- (45:1.5 cm + 2 pt) node[anchor=south west] {$\theta_2$};
+    \draw[line width=0.5 mm, red, ->] (-45:1.5 cm) arc (-45:45:1.5 cm);
+    \end{tikzpicture}
+    \caption{$\theta_1 < \theta_2$ and $\theta_2 - \theta_1 <= \pi$}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.475\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \draw (0,0) circle (1.5 cm);
+    \draw (1.5 cm - 2 pt, 0) -- (1.5 cm + 2 pt, 0) node[anchor=west] {$0$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=south east] {$\pi$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=north east] {$-\pi$};
+    \draw (225:1.5 cm - 2 pt) -- (225:1.5 cm + 2 pt) node[anchor=north east] {$\theta_1$};
+    \draw (135:1.5 cm - 2 pt) -- (135:1.5 cm + 2 pt) node[anchor=south east] {$\theta_2$};
+    \draw[line width=0.5 mm, red, <-] (135:1.5 cm) arc (135:225:1.5 cm);
+    \end{tikzpicture}
+    \caption{$\theta_1 < \theta_2$ and $\theta_2 - \theta_1 > \pi$}
+\end{subfigure}
+\vskip\baselineskip
+\begin{subfigure}[b]{0.475\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \draw (0,0) circle (1.5 cm);
+    \draw (1.5 cm - 2 pt, 0) -- (1.5 cm + 2 pt, 0) node[anchor=west] {$0$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=south east] {$\pi$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=north east] {$-\pi$};
+    \draw (-45:1.5 cm - 2 pt) -- (-45:1.5 cm + 2 pt) node[anchor=north west] {$\theta_2$};
+    \draw (45:1.5 cm - 2 pt) -- (45:1.5 cm + 2 pt) node[anchor=south west] {$\theta_1$};
+    \draw[line width=0.5 mm, red, <-] (-45:1.5 cm) arc (-45:45:1.5 cm);
+    \end{tikzpicture}
+    \caption{$\theta_1 > \theta_2$ and $\theta_1 - \theta_2 < \pi$}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.475\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \draw (0,0) circle (1.5 cm);
+    \draw (1.5 cm - 2 pt, 0) -- (1.5 cm + 2 pt, 0) node[anchor=west] {$0$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=south east] {$\pi$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=north east] {$-\pi$};
+    \draw (225:1.5 cm - 2 pt) -- (225:1.5 cm + 2 pt) node[anchor=north east] {$\theta_2$};
+    \draw (135:1.5 cm - 2 pt) -- (135:1.5 cm + 2 pt) node[anchor=south east] {$\theta_1$};
+    \draw[line width=0.5 mm, red, ->] (135:1.5 cm) arc (135:225:1.5 cm);
+    \end{tikzpicture}
+    \caption{$\theta_1 > \theta_2$ and $\theta_1 - \theta_2 >= \pi$}
+\end{subfigure}
+\caption{Four different situations when interpolating angles of rotation}
+\label{fig:interpolation_situations}
+\end{figure}
 
-Computing the interpolated angle is then done using one of the four equations below, depending on in which of the cases shown in \note{link to figure above} we currently are.
+Computing the interpolated angle is then done using one of the four equations below, depending on in which of the cases shown in Figure \ref{fig:interpolation_situations} we currently are.
 
 \[
     \theta = 
     \begin{cases}
-        \text{case 1: } \theta_1 + (\theta_2 - \theta_1)*ratio \\
-        \text{case 2: } \theta_2 + (\theta_1 - \theta_2)*(1 - ratio) \\
-        \text{case 3: } \theta_1 + (2\pi + \theta_2 - \theta_1)*ratio \\
-        \text{case 4: } \theta_2 + (2\pi + \theta_1 - \theta_2)*(1 - ratio) \\
+        \text{case a: } \theta_1 + (\theta_2 - \theta_1)*ratio \\
+        \text{case b: } \theta_2 + (2\pi + \theta_1 - \theta_2)*(1 - ratio) \\
+        \text{case c: } \theta_2 + (\theta_1 - \theta_2)*(1 - ratio) \\
+        \text{case d: } \theta_1 + (2\pi + \theta_2 - \theta_1)*ratio \\
     \end{cases}
 \]
 
@@ -182,7 +316,38 @@ Finally, if the resulting angle is larger than $\pi$, we subtract $2\pi$ from it
 
 As a last remark, if the difference between the start and end angle is exactly $\pi$, we always interpolate in a counter-clockwise manner. This means that when $\theta_1 < \theta_2$, the interpolation goes through $0$, and otherwise the interpolation goes through $\pi$.
 
-\note{Maybe image of interpolation cases when $\theta_{diff} = \pi$}
+\begin{figure}[h!]
+\centering
+\begin{subfigure}[b]{0.475\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \draw (0,0) circle (1.5 cm);
+    \draw (1.5 cm - 2 pt, 0) -- (1.5 cm + 2 pt, 0) node[anchor=west] {$0$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=south east] {$\pi$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=north east] {$-\pi$};
+    \draw (-135:1.5 cm - 2 pt) -- (-135:1.5 cm + 2 pt) node[anchor=north east] {$\theta_1$};
+    \draw (45:1.5 cm - 2 pt) -- (45:1.5 cm + 2 pt) node[anchor=south west] {$\theta_2$};
+    \draw[line width=0.5 mm, red, ->] (-135:1.5 cm) arc (-135:45:1.5 cm);
+    \end{tikzpicture}
+    \caption{$\theta_1 < \theta_2$ and $\theta_2 - \theta_1 = \pi$}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.475\textwidth}
+    \centering
+    \begin{tikzpicture}
+    \draw (0,0) circle (1.5 cm);
+    \draw (1.5 cm - 2 pt, 0) -- (1.5 cm + 2 pt, 0) node[anchor=west] {$0$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=south east] {$\pi$};
+    \draw (-1.5 cm - 2 pt, 0) -- (-1.5 cm + 2 pt, 0) node[anchor=north east] {$-\pi$};
+    \draw (225:1.5 cm - 2 pt) -- (225:1.5 cm + 2 pt) node[anchor=north east] {$\theta_2$};
+    \draw (45:1.5 cm - 2 pt) -- (45:1.5 cm + 2 pt) node[anchor=south west] {$\theta_1$};
+    \draw[line width=0.5 mm, red, ->] (45:1.5 cm) arc (45:225:1.5 cm);
+    \end{tikzpicture}
+    \caption{$\theta_1 > \theta_2$ and $\theta_1 - \theta_2 = \pi$}
+\end{subfigure}
+\caption{Interpolation of a 180 degree rotation}
+\label{fig:180_rotation}
+\end{figure}
 
 \subsection{Interpolate Long}
 \label{section:interpolate_long}
