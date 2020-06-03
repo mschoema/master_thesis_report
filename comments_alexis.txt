@@ -1,0 +1,10 @@
+Ok - 2.2.1 : 'The only exception is that the endpoints of the segments can be identical, and in that case the linestring is closed'. Je trouve la phrase pas très claire, je le formulerais plutôt en parlant du début et de la fin des chaines de segments. 
+
+Ok - valid if no two of its rings intersect, la formulation me semble bizarre -> Je pense que je vais garder
+
+Ok - page 5 : Author Name en pied de page  (Author Name est mis souvent en pied de page), pareil pour Thesis Title en tête de page
+Ok - page 6 : just as a a temporal instant (deux a)
+
+Ok - 4.1 : tu utilises le Je, pas sur que ce soit autorisé en mémoire (sauf remerciements etc)
+- page 22 tu as mis un \newpage ? ça laisse une grande page vide, pareil page 37 ? -> Pas certain de ce que je dois faire. C'est pas un nouveau chapitre, mais c'est suffisamment différent que pour démarrer ça sur une nouvelle page je pense.
+Ok - Table 4.10, normal d'avoir une case vide ? -> Normal, il n'y a pas d'operateur pour la fonction 'cmp'

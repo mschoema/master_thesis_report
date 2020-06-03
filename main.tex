@@ -18,7 +18,7 @@
 \usepackage{xcolor}
 \definecolor{cverbbg}{gray}{0.95}
 \usepackage{listings}
-\lstset{basicstyle=\ttfamily\small, flexiblecolumns, backgroundcolor=\color{cverbbg}, breaklines, escapechar=\\}
+\lstset{basicstyle=\ttfamily\small, flexiblecolumns, backgroundcolor=\color{cverbbg}, mathescape, breaklines, escapechar=\\}
 
 \usepackage{lipsum} 
 
@@ -35,11 +35,10 @@
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhead{}
-\fancyhead[RO,LE]{Thesis Title}
+\fancyhead[RO,LE]{Fixed-shape Moving Regions in MobilityDB}
 \fancyfoot{}
 \fancyfoot[LE,RO]{\thepage}
-\fancyfoot[LO,CE]{Chapter \thechapter}
-\fancyfoot[CO,RE]{Author Name}
+\fancyfoot[LO,RE]{Chapter \thechapter}
 
 \newcommand{\note}[1]{\textcolor{red}{[#1]}}
 \newcommand{\eqtab}{\;\;\;\;\;\;}

@@ -7,7 +7,7 @@ PostgreSQL \cite{postgresql} is an open-source object-relational database manage
 
 The name of the system reflects its support for most SQL standards, but the system also offers many advanced features, such as complex queries, foreign keys, triggers, multi-version concurrency control and more. 
 
-PostgreSQL is also highly extensible, which allows users to define new data types, functions, indexing methods and more, without having to modify the core database engines. This feature allows new extensions to be added, capable of handling user-defined data types, while keeping the full power of a traditional database management system [DBMS].
+PostgreSQL is also highly extensible, which allows users to define new data types, functions, indexing methods and more, without having to modify the core database engine. This feature allows new extensions to be added, capable of handling user-defined data types, while keeping the full power of a traditional database management system [DBMS].
 
 \section{PostGIS}
 \label{section:postgis}
@@ -16,13 +16,13 @@ PostGIS \cite{postgis}, released in 2001, is one example of an extension to the 
 
 This extension allows \textit{Geographical Information System} [GIS] objects, such as points, linestring or polygons, to be stored in the database. It also includes support for processing and analyzing GIS objects, by defining functions and operations that can be used to process them, such as distance and area functions.
 
-A PostGIS type that will be used a lot in this thesis is the \textit{Polygon} type, since this will be used to represent a static region. 
+A PostGIS type that will be used a lot in this thesis is the \textit{polygon} type, since this will be used to represent a static region. 
 
 \subsection{PostGIS Polygon Type}
 \label{section:postgis_polygon}
 
 A PostGIS polygon object is defined as having an exterior ring, as well as zero or more interior rings that define holes in the polygon. The PostGIS \textit{linestring} type is used to described these rings. A linestring
-is a list of points representing a continuous line composed of multiple segments. For this linestring to be valid, it cannot intersect itself in any point (Figure \ref{fig:linestring_normal}). The only exception is that the endpoints of the segments can be identical, and in that case the linestring is \textit{closed} (Figure \ref{fig:linestring_closed}). Both the exterior and interior rings of a polygon are described using closed linestrings.
+is a list of points representing a continuous line composed of multiple segments. For this linestring to be valid, it cannot intersect itself in any point (Figure \ref{fig:linestring_normal}). The only exception is that the endpoints of the chain of segments can coincide (both endpoints have the same coordinates), and in that case the linestring is \textit{closed} (Figure \ref{fig:linestring_closed}). Both the exterior and interior rings of a polygon are described using closed linestrings.
 
 \begin{figure}[h!]
 \centering
@@ -79,18 +79,18 @@ Contrary to most research papers about moving regions \cite{polyhedra,model_stru
 \section{MobilityDB}
 \label{section:mobilitydb}
 
-MobilityDB \cite{mobilitydb} is an extension to PostgreSQL and PostGIS that provides \textit{temporal types}, used to represent the evolution on time of some base type. For example, the temperature of a room can be represented by a real value that changes through time. In this case, the temporal type is a \textit{temporal float}, with the base type being \textit{float}. As another example, a \textit{temporal integer} can be used to represent the number of people on a train. Similarly, a \textit{temporal point} can be used to store the position of a taxicab, as reported by a GPS device.
+MobilityDB \cite{mobilitydb} is an extension to PostgreSQL and PostGIS that provides \textit{temporal types}, used to represent the evolution on time of some base type. For example, the temperature of a room can be represented by a real value that changes through time. In this case, the temporal type is a \textit{temporal float} (\lstinline{tfloat}), with the base type being \lstinline{float}. As another example, a \textit{temporal integer} (\lstinline{tint}) can be used to represent the number of people on a train. Similarly, a \textit{temporal point} (\lstinline{tgeompoint} or \lstinline{tgeogpoint}) can be used to store the position of a taxicab, as reported by a GPS device.
 
 MobilityDB makes use of the predefined operations on the base type, such as arithmetic operations and aggregations for integers and floats or spatial functions for geometries, to define new operations that can handle temporal types.
 
-MobilityDB uses four time types to represent extents of time: \textit{timestamptz}, \textit{timestampset}, \textit{period} and \textit{periodset}. Timestamptz is a PostgreSQL type, while the three other types are new. Two new range types are also defined in MobilityDB: \textit{intrange} and \textit{floatrange}
+MobilityDB uses four time types to represent extents of time: \lstinline{timestamptz}, \lstinline{timestampset}, \lstinline{period} and \lstinline{periodset}. Timestamptz is a PostgreSQL type, while the three other types are new. Two new range types are also defined in MobilityDB: \lstinline{intrange} and \lstinline{floatrange}
 
 \subsection{Temporal Types}
 \label{section:mobilitydb_ttypes}
 
-There are six existing temporal types, \textit{tbool}, \textit{ttext}, \textit{tint}, \textit{tfloat}, \textit{tgeompoint} and \textit{tgeogpoint}, based on, respectively, the base types bool, text, int, float, geometry(Point) and geography(Point). The last two are the PostGIS types for points, restricted to 2D and 3D.
+There are six existing temporal types, \lstinline{tbool}, \lstinline{ttext}, \lstinline{tint}, \lstinline{tfloat}, \lstinline{tgeompoint} and \lstinline{tgeogpoint}, based on, respectively, the base types \lstinline{bool}, \lstinline{text}, \lstinline{int}, \lstinline{float}, \lstinline{geometry(Point)} \lstinline{and geography(Point)}. The last two are the PostGIS types for points, restricted to 2D and 3D.
 
-Temporal types can have four possible duration: Instant, Instant Set, Sequence and Sequence Set. These durations define the temporal extent at which the evolution of values is defined.
+Temporal types can have four possible duration: \lstinline{Instant}, \lstinline{Instant Set}, \lstinline{Sequence} and \lstinline{Sequence Set}. These durations define the temporal extent at which the evolution of values is defined.
 
 \subsubsection{Temporal Instant}
 \label{section:mobilitydb_inst}
@@ -104,9 +104,9 @@ where \(v\) is the value and \(t\) is the timestamp.
 
 For example, if we want to store the fact that the temperature of a room was 21 (degrees Celsius) on September 1st 2019 at midnight, we will store this as:
 
-\[
-    '21@\text{2019-01-01 00:00:00}'
-\]
+\begin{lstlisting}
+tfloat '21@2019-01-01 00:00:00'
+\end{lstlisting}
 
 \subsubsection{Temporal Instant Set}
 \label{section:mobilitydb_i}
@@ -123,11 +123,11 @@ The value of this object is thus defined only at the given timestamps, and no as
 \subsubsection{Temporal Sequence}
 \label{section:mobilitydb_seq}
 
-A temporal sequence is defined just as a a temporal instant set, except that the values for intermediate timestamps can be obtained by interpolation. The value of the temporal object is thus assumed to be defined over the whole period of the sequence.
+A temporal sequence is defined just as a temporal instant set, except that the values for intermediate timestamps can be obtained by interpolation. The value of the temporal object is thus assumed to be defined over the whole period of the sequence.
 
 Depending on the base type of the object, two interpolation methods are possible, stepwise/discrete or linear/continuous. The base types bool, text, and integer are forced to use a discrete interpolation method, whereas the base types float, geometry and geography can use either one depending on the use case.
 
-For example, when using a \textit{tint} to represent the number of people in a bus, if a new temporal instant is added every time someone steps in or out of the bus, we can get the number of people in the bus at any time during its trip, by simply looking at the latest defined value before that instant. This is an example of a stepwise interpolation for temporal integers.
+For example, when using a \lstinline{tint} to represent the number of people in a bus, if a new temporal instant is added every time someone steps in or out of the bus, we can get the number of people in the bus at any time during its trip, by simply looking at the latest defined value before that instant. This is an example of a stepwise interpolation for temporal integers.
 
 An example of a linear interpolation could be the case of a room thermometer. If we measure the temperature sufficiently often, we can assume that the temperature between two measures can be obtained by interpolating linearly between these two values. These measurements will thus be stored in a temporal sequence with float base type, and intermediate values will be retrieved using a linear interpolation method.
 
@@ -155,13 +155,15 @@ It would theoretically be enough to only implement the temporal sequence set typ
 \subsection{Bounding Box}
 \label{section:mobilitydb_bbox}
 
-Each temporal object also has an associated bounding box, whose type depends on the base type of the object. The following bounding box types exist:
+Each temporal object also has an associated bounding box, whose type depends on the base type of the object. A bounding box is the smallest enclosing box in 1D, 2D or 4D space (depending on the type of object), that completely contains the given temporal object. For example, a  The following bounding box types exist:
 
 \begin{itemize}
-    \item Period: for the types \textit{tbool} and \textit{ttext}, where only the temporal extent is taken into account.
-    \item Tbox (temporal box): for the types \textit{tint} and \textit{tfloat}, where the value extent is stored in the X dimension, and the temporal extent in the T dimension.
-    \item STbox (spatio-temporal box): for the types \textit{tgeompoint} and \textit{tgeogpoint}, where the spatial extent stored in the X, Y and Z dimension, and the temporal extent in the T dimension.
+    \item \lstinline{Period}: for the types \lstinline{tbool} and \lstinline{ttext}, where only the temporal extent is taken into account (1D box).
+    \item \lstinline{Tbox} (temporal box): for the types \lstinline{tint} and \lstinline{tfloat}, where the value extent is stored in the X dimension, and the temporal extent in the T dimension (2D box).
+    \item \lstinline{STbox} (spatio-temporal box): for the types \lstinline{tgeompoint} and \lstinline{tgeogpoint}, where the spatial extent is stored in the X, Y and Z dimension, and the temporal extent in the T dimension (4D box).
 \end{itemize}
+
+For example, a temporal int of instant set duration: \lstinline+tint '{1@2001-01-01, 3@2001-01-02, 2@2001-01-03}'+, will have a corresponding Tbox: \lstinline{Tbox((1, 2001-01-01), (3, 2001-01-03))}. The first tuple of the bounding box contains the minimum values for all dimensions (here onl X and T), and the second tuple contains the maximum values  for these same dimensions.
 
 These bounding boxed are used instead of the temporal object itself in some operations, in particular those related to indexing, for efficiency reasons.
 
@@ -177,7 +179,6 @@ Note that this list is only there to introduce the set of functions exposed by M
 
         These functions are used to transform a temporal value into another duration. If the transformation is not possible, an error will be raised. 
 
-        e.g., tintseq:
         \begin{lstlisting}
 SELECT tintseq(tint '1@2001-01-01');
 -- "[1@2001-01-01]"
@@ -185,7 +186,6 @@ SELECT tintseq(tint '1@2001-01-01');
 
         Appending a temporal instant to the temporal value, and merging two temporal values of the same duration, is also a part of the transformation functions.
 
-        e.g., appendInstant:
         \begin{lstlisting}
 SELECT appendInstant(tint '1@2001-01-01', tint '1@2001-01-02');
 -- "{1@2001-01-01, 1@2001-01-02}"
@@ -197,19 +197,16 @@ SELECT appendInstant(tint '1@2001-01-01', tint '1@2001-01-02');
 
         Some example functions are shown below:
 
-        e.g., memsize:
         \begin{lstlisting}
 SELECT memsize(tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]');
 -- 280
         \end{lstlisting}
 
-        e.g., getValue:
         \begin{lstlisting}
 SELECT getValue(tint '1@2001-01-01');
 -- 1
         \end{lstlisting}
 
-        e.g., instantN:
         \begin{lstlisting}
 SELECT instantN(tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]', 2);
 -- "2@2001-01-02"
@@ -219,9 +216,8 @@ SELECT instantN(tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]', 2);
 
         Spatial functions that can be applied to temporal points. Most of the functions support 3D points, and/or are available for geographies.
 
-        These functions range from output in specific format (e.g., \textit{EWK} or \textit{MFJSON}), to more complicated accessor functions, such as \textit{speed} or \textit{nearestApproachDistance}.
+        These functions range from output in specific format (e.g., \textit{EWK} or \textit{MFJSON}), to more complicated accessor functions, such as \lstinline{speed} or \lstinline{nearestApproachDistance}.
 
-        e.g., speed:
         \begin{lstlisting}
 SELECT speed(tgeompoint '[Point(1 0)@2001-01-01, Point(1 0)@2001-01-02, Point(1 1)@2001-01-03]') * 3600 * 24;
 -- "{[0@2001-01-01, 0@2001-01-02], [1@2001-01-02, 1@2001-01-03]}"
@@ -230,9 +226,8 @@ SELECT speed(tgeompoint '[Point(1 0)@2001-01-01, Point(1 0)@2001-01-02, Point(1 
     \item Restriction Functions:
 
         These functions restrict a temporal value, either on its value extent or its time extent.
-        Example of restriction functions are: \textit{atValue}, \textit{atMax}, \textit{atPeriod}, etc.
+        Example of restriction functions are: \lstinline{atValue}, \lstinline{atMax}, \lstinline{atPeriod}, etc.
 
-        e.g., atMax:
         \begin{lstlisting}
 SELECT atMax(tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]');
 -- "{[2@2001-01-02]}"
@@ -242,7 +237,6 @@ SELECT atMax(tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]');
 
         These functions act similarly to the restriction functions, except that they restrict the temporal value to the complement of a value or a time extent.
 
-        e.g., minusValue:
         \begin{lstlisting}
 SELECT minusValue(tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]', 2);
 -- "{[1@2001-01-01, 1@2001-01-02), [1@2001-01-03]}"
@@ -250,20 +244,20 @@ SELECT minusValue(tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]', 2);
 
     \item Comparison Operators
 
-        Implementation of the traditional comparison operators ('$=$', '$<$' and so on). Except for equality and inequality, these are not useful for real-world use cases, but they allow the construction of B-tree indexes on temporal types. 
+        Implementation of the traditional comparison operators ('\lstinline+=+', '\lstinline+<+' and so on). Except for equality and inequality, these are not useful for real-world use cases, but they allow the construction of B-tree indexes on temporal types. 
 
     \item Ever and Always Equals Operators
 
-        These operators test whether a temporal value is ever equal ('$\&=$') or always equal ('$@=$') to a value.
+        These operators test whether a temporal value is ever equal ('\lstinline+&=+') or always equal ('\lstinline+@=+') to a value.
 
     \item Temporal Comparison Operators
 
         These comparison operators are generalization of the traditional comparison operators, and return a \textit{tbool} value.
 
-        e.g., temporal not equal, \lstinline{#<>}:
+        For example, the temporal not equal operator, applied using the symbol \lstinline{#<>}:
         \begin{lstlisting}
 SELECT tint '[1@2001-01-01, 4@2001-01-04]' #<> 2;
--- "{[t@2001-01-01, f@2001-01-02, t@2001-01-03, t@2001-01-04]}"
+-- "{[true@2001-01-01, false@2001-01-02, true@2001-01-03, true@2001-01-04]}"
         \end{lstlisting}
 
     \item Mathematical Function Operators
@@ -272,7 +266,7 @@ SELECT tint '[1@2001-01-01, 4@2001-01-04]' #<> 2;
 
     \item Boolean Operators
 
-        Boolean \textit{and}, \textit{or} and \textit{not}.
+        Boolean \lstinline{and}, \lstinline{or} and \lstinline{not}.
 
     \item Text Functions and Operators
 
@@ -282,7 +276,7 @@ SELECT tint '[1@2001-01-01, 4@2001-01-04]' #<> 2;
 
         These are the comparison operators on the corresponding bounding boxes of temporal values. Operators exist for different kind of relationships (for example: less than, contains, overlaps, equal, etc) and for all possible dimensions of the bounding boxes (value/X, Y, Z and T dimension). As said previously, the Y and Z dimensions are only used in case of temporal points. These functions all return a boolean value.
 
-        e.g., Bounding box overlap, \lstinline{&&}:
+        For example, the bounding box overlap operator, applied using the symbol \lstinline{&&}:
         \begin{lstlisting}
 SELECT tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]' && 2);
 -- true
@@ -290,20 +284,20 @@ SELECT tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]' && 2);
 
     \item Distance Operators
 
-        Computes the distance between two temporal points as a tfloat ('\(<->\)') or the smallest distance between two temporal points as a float ('\(|=|\)'). Since the distance function quadratic, the distance operator uses a linear approximation of the usual distance functions, to be able to return a tfloat.
+        Computes the distance between two temporal points as a \lstinline{tfloat} ('\lstinline+<->+)') or the smallest distance between two temporal points as a float ('\lstinline+|=|+'). Since the real distance function is the square root of a quadratic function, but MobilityDB assumes linear interpolation between instants, the distance operator in MobilityDB returns actually a linear approximation of the real distance between its arguments.
 
     \item Spatial Relationships for Temporal Points
 
-        The PostGIS spatial relationships functions (such as \textit{ST\_Intersects} and \textit{ST\_Relate}) are generalized in two different ways. In the first version, the PostGIS functions are applied to the union of all values taken by a temporal point (for example, \textit{intersects} and \textit{relate}). The second version is defined with temporal semantics and returns a temporal value. For the two example functions, the second version is \textit{tintersects} and \textit{trelate}, which return a \textit{tbool} and a \textit{ttext} respectively.
+        The PostGIS spatial relationships functions (such as \lstinline{ST_Intersects} and \lstinline{ST_Relate}) are generalized in two different ways. In the first version, the PostGIS functions are applied to the union of all values taken by a temporal point (for example, \lstinline{intersects} and \lstinline{relate}). The second version is defined with temporal semantics and returns a temporal value. For the two example functions, the second version is \lstinline{tintersects} and \lstinline{trelate}, which return a \lstinline{tbool} and a \lstinline{ttext} respectively.
 
     \item Aggregate Functions for Temporal Types
 
-        These are the generalization of the usual aggregation functions, such as \textit{tcount}, \textit{tmax}, etc. The generalized form is defined with temporal semantics, and return a temporal value.
+        These are the generalization of the usual aggregation functions, such as \lstinline{tcount}, \lstinline{tmax}, etc. The generalized form is defined with temporal semantics, and return a temporal value.
 
 \end{itemize}
 
 \subsection{Additional Notations}
 \label{section:mobilitydb_notations}
 
-When talking specifically about a temporal type of instant duration, we will add a suffix \textit{inst} to the name of the type. For example a temporal float of instant duration will be denoted \textit{tfloatinst}. 
-Similarly, for temporal instants of instant set, sequence and sequence set duration, we will add respectively the suffix \textit{i}, \textit{seq} and \textit{s}. For the base type float, this will thus become: \textit{tfloati}, \textit{tfloatseq} and \textit{tfloats}.
+When talking specifically about a temporal type of instant duration, we will add a suffix \lstinline{inst} to the name of the type. For example a temporal float of instant duration will be denoted \lstinline{tfloatinst}. 
+Similarly, for temporal instants of instant set, sequence and sequence set duration, we will add respectively the suffix \lstinline{i}, \lstinline{seq} and \lstinline{s}. For the base type float, this will thus become: \lstinline{tfloati}, \lstinline{tfloatseq} and \lstinline{tfloats}.

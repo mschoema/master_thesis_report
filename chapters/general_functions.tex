@@ -1,108 +1,105 @@
 %!TEX root = ../main.tex
 
-\clearpage
-
 \section{Implementation of MobilityDB Functions}
 \label{section:general_functions}
 
-The main focus of this master thesis is extending MobilityDB by adding a new type to represent moving regions and by implementing a set of functions to input, manipulate and output this new type. In Section \ref{section:mobilitydb_functions}, different types of functions and operators are presented, and most of these functions are polymorphic, meaning that they accept different input types and that their output depends on these input types. The next section lists and describes most of these functions, and explains how they are used to manipulate the tgeometry type.
+The main focus of this master thesis is extending MobilityDB by adding a new type to represent moving regions and by implementing a set of functions to input, manipulate and output this new type. In Section \ref{section:mobilitydb_functions}, different types of functions and operators are presented, and most of these functions are polymorphic, meaning that they accept different input types and that their output depends on these input types. The next section lists and describes most of these functions, and explains how they are used to manipulate the \lstinline+tgeometry+ type.
 
 \subsection{Type Declaration Functions and Parameters}
 \label{section:type_declaration}
 
-When defining a new SQL type, 2 functions have to be declared, and a few other functions and parameters are optional. The two required functions are \textit{input} and \textit{output}, converting a \textit{cstring} (C string type) to the newly declared type and back. The optional functions and parameters are used to declare the internal storage length of the type, the storage alignment in bytes, input/out to and from byte format, type modifier specification, and more.
+When defining a new SQL type, 2 functions have to be declared, and a few other functions and parameters are optional. The two required functions are \lstinline{input} and \lstinline{output}, converting a \lstinline{cstring} (C string type) to the newly declared type and back. The optional functions and parameters are used to declare the internal storage length of the type, the storage alignment in bytes, input/out to and from byte format, type modifier specification, and more.
 
-As explained previously, two new types have been added to MobilityDB: \textit{rtransform} and \textit{tgeometry}. Four variations of the tgeometry type (\textit{tgeometryinst}, \textit{tgeometryi}, \textit{tgeometryseq} and \textit{tgeometrys}) are also present at the C-level, but only these two top-level types are exposed at the SQL level. Table \ref{table:rtransform_type_declaration} lists the declared parameters and functions for the rtransform type, and Table \ref{table:tgeometry_type_declaration} described the tgeometry type.
+As explained previously, two new types have been added to MobilityDB: \lstinline{rtransform} and \lstinline{tgeometry}. Four variations of the \lstinline+tgeometry+ type (\lstinline{tgeometryinst}, \lstinline{tgeometryi}, \lstinline{tgeometryseq} and \lstinline{tgeometrys}) are also present at the C-level, but only these two top-level types are exposed at the SQL level. Table \ref{table:rtransform_type_declaration} lists the declared parameters and functions for the \lstinline+rtransform+ type, and Table \ref{table:tgeometry_type_declaration} described the \lstinline+tgeometry+ type.
 
-\begin{table}[h!]
+\begin{table}[htb]
     \centering
     \begin{tabularx}{\textwidth}{|l|l|X|}
     \hline
     \textbf{Parameter}  & \textbf{Value}        & \textbf{Description} \\ 
     \hline
-    internal length     & 24                    & Internal storage length in bytes. \\
+    \lstinline+internal length+     & 24                    & Internal storage length in bytes. \\
     \hline
-    alignment           & double                & Storage alignment of the type. \\
+    \lstinline+alignment+           & \lstinline+double+                & Storage alignment of the type. \\
     \hline
     \multicolumn{2}{|l|}{\textbf{Function}}     & \textbf{Description} \\ 
     \hline
-    \multicolumn{2}{|l|}{input}                 & Conversion from \textit{cstring} to \textit{rtransform} type \\
+    \multicolumn{2}{|l|}{\lstinline+input+}     & Conversion from \lstinline{cstring} to \lstinline{rtransform} type \\
     \hline
-    \multicolumn{2}{|l|}{output}                & Conversion from \textit{rtransform} to \textit{cstring} type \\
+    \multicolumn{2}{|l|}{\lstinline+output+}    & Conversion from \lstinline{rtransform} to \lstinline{cstring} type \\
     \hline
-    \multicolumn{2}{|l|}{receive}               & Conversion from \textit{bytea} to \textit{rtransform} type \\
+    \multicolumn{2}{|l|}{\lstinline+receive+}               & Conversion from \lstinline{bytea} to \lstinline{rtransform} type \\
     \hline
-    \multicolumn{2}{|l|}{send}                  & Conversion from \textit{rtransform} to \textit{bytea} type \\
+    \multicolumn{2}{|l|}{\lstinline+send+}                  & Conversion from \lstinline{rtransform} to \lstinline{bytea} type \\
     \hline
     \end{tabularx}
-    \caption{Declared parameters and functions for the \textit{rtransform} type}
+    \caption{Declared parameters and functions for the \lstinline{rtransform} type}
     \label{table:rtransform_type_declaration}
 \end{table}
 
-The rtransform type stores three double (8-byte) values, two for the translation and one for the rotation, and has thus a fixed length of 24 bytes. Since values of this type will never be store alone, but always as part of a tgeometry value, the storage strategy does not need to be declared. During the input from a string, we make sure that the value for the rotation is between $-\pi$ and $\pi$. The output as a string is formatted as follows:
+The \lstinline+rtransform+ type stores three double (8-byte) values, two for the translation and one for the rotation, and has thus a fixed length of 24 bytes. Since values of this type will never be store alone, but always as part of a \lstinline+tgeometry+ value, the storage strategy does not need to be declared. During the input from a string, we make sure that the value for the rotation is between $-\pi$ and $\pi$. The output as a string is formatted as follows:
 
 \[
-    \text{"RTransform(}\theta,\ v_x,\ v_y{)"}
+    \text{"RTransform(}\theta,\ v_x,\ v_y{)"}, 
 \]
+where all three values are written with up to 15 decimal digits. The binary representation is simply a list of three doubles in the same order as in the string representation.
 
-, where all three values are written with up to 15 decimal digits. The binary representation is simply a list of three doubles in the same order as in the string representation.
-
-\begin{table}[h!]
+\begin{table}[htb]
     \centering
     \begin{tabularx}{\textwidth}{|l|l|X|}
     \hline
     \textbf{Parameter}  & \textbf{Value}        & \textbf{Description} \\ 
     \hline
-    internal length     & variable              & Internal storage length of the type in bytes. \\
+    \lstinline+internal length+     & \lstinline+variable+              & Internal storage length of the type in bytes. \\
     \hline
-    storage             & extended              & Storage strategy of the type. \\
+    \lstinline+storage+             & \lstinline+extended+              & Storage strategy of the type. \\
     \hline
-    alignment           & double                & Storage alignment of the type. \\
+    \lstinline+alignment+           & \lstinline+double+                & Storage alignment of the type. \\
     \hline
     \multicolumn{2}{|l|}{\textbf{Function}}     & \textbf{Description} \\ 
     \hline
-    \multicolumn{2}{|l|}{input}                 & Conversion from \textit{cstring} to \textit{tgeometry} type \\
+    \multicolumn{2}{|l|}{\lstinline+input+}     & Conversion from \lstinline{cstring} to \lstinline{tgeometry} type \\
     \hline
-    \multicolumn{2}{|l|}{output}                & Conversion from \textit{tgeometry} to \textit{cstring} type \\
+    \multicolumn{2}{|l|}{\lstinline+output+}    & Conversion from \lstinline{tgeometry} to \lstinline{cstring} type \\
     \hline
-    \multicolumn{2}{|l|}{receive}               & Conversion from \textit{bytea} to \textit{tgeometry} type \\
+    \multicolumn{2}{|l|}{\lstinline+receive+}   & Conversion from \lstinline{bytea} to \lstinline{tgeometry} type \\
     \hline
-    \multicolumn{2}{|l|}{send}                  & Conversion from \textit{tgeometry} to \textit{bytea} type \\
+    \multicolumn{2}{|l|}{\lstinline+send+}      & Conversion from \lstinline{tgeometry} to \lstinline{bytea} type \\
     \hline
     \end{tabularx}
-    \caption{Declared parameters and functions for the \textit{tgeometry} type}
+    \caption{Declared parameters and functions for the \lstinline{tgeometry} type}
     \label{table:tgeometry_type_declaration}
 \end{table}
 
-The tgeometry type contains PostGIS polygons (which are of variable length) and can have an arbitrary number of defined instants, so it must be defined as variable-length. Since the type is variable in length, the \textit{plain} storage strategy, storing the values in-line without compression, cannot be used. The \textit{extended} strategy is thus used to compress large values, and even move them out of the main table if the value is still too large.
+The \lstinline+tgeometry+ type contains PostGIS polygons (which are of variable length) and can have an arbitrary number of defined instants, so it must be defined as variable-length. Since the type is variable in length, the \lstinline{plain} storage strategy, storing the values in-line without compression, cannot be used. The \lstinline{extended} strategy is thus used to compress large values, and even move them out of the main table if the value is still too large.
 
-The string representation of the the tgeometry types depends on the duration of the value as described in Section \ref{section:mobilitydb} (instant, instant set, ...), and represents the values of the instants as PostGIS polygon types. These conversion functions from and to a string are defined together with the conversion functions from and to a byte list.
+The string representation of the the \lstinline+tgeometry+ types depends on the duration of the value as described in Section \ref{section:mobilitydb} (instant, instant set, ...), and represents the values of the instants as PostGIS polygon types. These conversion functions from and to a string are defined together with the conversion functions from and to a byte list.
 
 \subsection{Constructors}
 \label{section:constructors}
 
-Four different constructors exist for tgeometry types, one for each duration.
+Four different constructors exist for \lstinline+tgeometry+ types, one for each duration.
 
-\begin{table}[h!]
+\begin{table}[htb]
     \centering
     \begin{tabularx}{\textwidth}{|l|X|}
     \hline
     \textbf{Function}   & \textbf{Signature} \\ 
     \hline
-    tgeometryinst       & geometry(Polygon) x timestamptz $\rightarrow$ tgeometry(Instant) \\
+    \lstinline+tgeometryinst+       & \lstinline+geometry(Polygon)+ $\times$ \lstinline+timestamptz+ $\rightarrow$ \lstinline+tgeometry(Instant)+ \\
     \hline
-    tgeometryi          & array tgeometry(Instant) $\rightarrow$ tgeometry(Instant Set) \\
+    \lstinline+tgeometryi+          & \lstinline+array tgeometry(Instant)+ $\rightarrow$ \lstinline+tgeometry(Instant Set)+ \\
     \hline
-    tgeometryseq        & array tgeometry(Instant) x lower inclusive x upper inclusive x linear $\rightarrow$ tgeometry(Sequence) \\
+    \lstinline+tgeometryseq+        & \lstinline+array tgeometry(Instant)+ $\times$ \lstinline+lower inclusive+ $\times$ \lstinline+upper inclusive+ $\times$ \lstinline+linear+ $\rightarrow$ \lstinline+tgeometry(Sequence)+ \\
     \hline
-    tgeometrys          & array tgeometry(Sequence) $\rightarrow$ tgeometry(Sequence Set) \\
+    \lstinline+tgeometrys+          & \lstinline+array tgeometry(Sequence)+ $\rightarrow$ \lstinline+tgeometry(Sequence Set)+ \\
     \hline
     \end{tabularx}
     \caption{Constructor functions}
     \label{table:constructor_funcs}
 \end{table}
 
-When creating a tgeometryinst, the input geometry is checked to make sure that it is a 2D polygon. Both the instant set and sequence constructors receive and array of tgeometryinst as input, while the sequence set constructor requires an array of tgeometryseq. Different checks are done to make sure that this input array corresponds to a correct temporal geometry.
+When creating a \lstinline+tgeometryinst+, the input geometry is checked to make sure that it is a 2D polygon. Both the instant set and sequence constructors receive and array of \lstinline+tgeometryinst+ as input, while the sequence set constructor requires an array of \lstinline+tgeometryseq+. Different checks are done to make sure that this input array corresponds to a correct temporal geometry.
 
 First of all, when creating an instance set or a sequence, the usual timestamp checks are done, meaning that the instants must have strictly increasing timestamps. Lastly, the regions are compared with one another, to make sure that they have the same shape.
 
@@ -131,50 +128,50 @@ This comparison between regions is done in two steps. A first quick check compar
     \label{fig:constr_checks}
 \end{figure}
 
-If all polygons are indeed fixed-shape, the input array is accepted and saved using the representation described in Section \ref{section:internal_repr_i} and \ref{section:internal_repr_seq}.
+If all polygons are indeed fixed-shape, the input array is accepted and saved using the representation described in Sections \ref{section:internal_repr_i} and \ref{section:internal_repr_seq}.
 
 The sequence constructor has three additional parameters. The first two specify if the start and end instant are inclusive or not and by default both are considered inclusive. The last parameter specifies the interpolation strategy for the sequence, either linear or stepwise. The sequence set constructor has checks similar to the two previous ones, but since the input durations are already assumed to be sequences, only the comparisons between distinct sequences has to be done. During these comparisons, checks are done to assure continuously increasing timestamps, and fixed-shape polygons across the whole sequence set.
 
-Every tgeometry instance of either instant set, sequence or sequence set duration also computes and saves a bounding box used for optimization purposes. Section \ref{section:bbox_funcs} lists a few bounding-box specific functions, and Section \ref{section:bbox} explains how these bounding boxes can be computed. Temporal points of sequence and sequence set duration also save a \textit{trajectory}, which is also used to optimize a few functions. The polygon equivalent of this trajectory is the \textit{traverser area} of the polygon. The computation of the traversed areas of a moving region is discussed in Section \ref{section:traversed_area}.
+Every \lstinline+tgeometry+ instance of either instant set, sequence or sequence set duration also computes and saves a bounding box used for optimization purposes. Section \ref{section:bbox_funcs} lists a few bounding-box specific functions, and Section \ref{section:bbox} explains how these bounding boxes can be computed. Temporal points of sequence and sequence set duration also save a \textit{trajectory}, which is also used to optimize a few functions. The polygon equivalent of this trajectory is the \textit{traverser area} of the polygon. The computation of the traversed area of a moving region is discussed in Section \ref{section:traversed_area}.
 
 Lastly, the arrays of instants and sequences stored are normalize during the input process to allow for efficient comparisons later on. This normalization is necessary to ensure that identical paths have the same internal representation. This topic is further discussed in Section \ref{section:normalization}.
 
 \subsection{Transformation Functions}
 \label{section:transformation_funcs}
 
-Table \ref{table:transformation_funcs} lists the transformations functions that can be applied to tgeometry objects. The first four transformation functions are used to change the duration of a temporal geometry. These transformations are only possible when the correct number of instants and/or sequences are present in the input tgeometry. For example, for a temporal geometry to be transformed into a tgeometryinst, it must contain a single instant. Transforming into an instant set from a sequence set is only possible if every sequence in the set contains a single instant. The six possible transformations are listed below.
+Table \ref{table:transformation_funcs} lists the transformations functions that can be applied to \lstinline+tgeometry+ objects. The first four transformation functions are used to change the duration of a temporal geometry. These transformations are only possible when the correct number of instants and/or sequences are present in the input \lstinline+tgeometry+. For example, for a temporal geometry to be transformed into a \lstinline+tgeometryinst+, it must contain a single instant. Transforming into an instant set from a sequence set is only possible if every sequence in the set contains a single instant. The six possible transformations are listed below.
 
 \begin{itemize}
-    \item Instant $'\mathcal{R}@t'$ $\leftrightarrow$ Instant Set $'\{\mathcal{R}@t\}'$
-    \item Instant $'\mathcal{R}@t'$ $\leftrightarrow$ Sequence $'[\mathcal{R}@t]'$
-    \item Instant $'\mathcal{R}@t'$ $\leftrightarrow$ Sequence Set $'\{[\mathcal{R}@t]\}'$
-    \item Instant Set $'\{\mathcal{R}@t\}'$ $\leftrightarrow$ Sequence $'[\mathcal{R}@t]'$
-    \item Instant Set $'\{\mathcal{R}_0@t_0,\ ...,\ \mathcal{R}_n@t_n\}'$ $\leftrightarrow$ Sequence Set $'\{[\mathcal{R}_0@t_0],\ ...,\ [\mathcal{R}_n@t_n]\}'$
-    \item Sequence $'[\mathcal{R}_0@t_0,\ ...,\ \mathcal{R}_n@t_n]'$ $\leftrightarrow$ Sequence Set $'\{[\mathcal{R}_0@t_0,\ ...,\ \mathcal{R}_n@t_n]\}'$
+    \item \lstinline+Instant+ $'\mathcal{R}@t'$ $\leftrightarrow$ \lstinline+Instant Set+ $'\{\mathcal{R}@t\}'$
+    \item \lstinline+Instant+ $'\mathcal{R}@t'$ $\leftrightarrow$ \lstinline+Sequence+ $'[\mathcal{R}@t]'$
+    \item \lstinline+Instant+ $'\mathcal{R}@t'$ $\leftrightarrow$ \lstinline+Sequence Set+ $'\{[\mathcal{R}@t]\}'$
+    \item \lstinline+Instant Set+ $'\{\mathcal{R}@t\}'$ $\leftrightarrow$ \lstinline+Sequence+ $'[\mathcal{R}@t]'$
+    \item \lstinline+Instant Set+ $'\{\mathcal{R}_0@t_0,\ ...,\ \mathcal{R}_n@t_n\}'$ $\leftrightarrow$ \lstinline+Sequence Set+ $'\{[\mathcal{R}_0@t_0],\ ...,\ [\mathcal{R}_n@t_n]\}'$
+    \item \lstinline+Sequence+ $'[\mathcal{R}_0@t_0,\ ...,\ \mathcal{R}_n@t_n]'$ $\leftrightarrow$ \lstinline+Sequence Set+ $'\{[\mathcal{R}_0@t_0,\ ...,\ \mathcal{R}_n@t_n]\}'$
 \end{itemize}
 
 Next to changing their duration, temporal geometries can also be transformed by appending a new instant to the end or by merging two temporal geometries together, during which similar checks as in the constructors are applied.
 
-\begin{table}[h!]
+\begin{table}[htb]
     \centering
     \begin{tabularx}{\textwidth}{|l|X|}
     \hline
     \textbf{Function}   & \textbf{Signature} \\ 
     \hline
-    tgeometryinst       & tgeometry $\rightarrow$ tgeometry(Instant) \\
+    \lstinline+tgeometryinst+       & \lstinline+tgeometry+ $\rightarrow$ \lstinline+tgeometry(Instant)+ \\
     \hline
-    tgeometryi          & tgeometry $\rightarrow$ tgeometry(Instant Set) \\
+    \lstinline+tgeometryi+          & \lstinline+tgeometry+ $\rightarrow$ \lstinline+tgeometry(Instant Set)+ \\
     \hline
-    tgeometryseq        & tgeometry $\rightarrow$ tgeometry(Sequence) \\
+    \lstinline+tgeometryseq+        & \lstinline+tgeometry+ $\rightarrow$ \lstinline+tgeometry(Sequence)+ \\
     \hline
-    tgeometrys          & tgeometry $\rightarrow$ tgeometry(Sequence Set) \\
+    \lstinline+tgeometrys+          & \lstinline+tgeometry+ $\rightarrow$ \lstinline+tgeometry(Sequence Set)+ \\
     \hline
     \hline
-    appendInstant       & tgeometry x tgeometry(Instant) $\rightarrow$ tgeometry \\
+    \lstinline+appendInstant+       & \lstinline+tgeometry+ $\times$ \lstinline+tgeometry(Instant)+ $\rightarrow$ \lstinline+tgeometry+ \\
     \hline
-    merge               & tgeometry x tgeometry $\rightarrow$ tgeometry \\
+    \lstinline+merge+               & \lstinline+tgeometry+ $\times$ \lstinline+tgeometry+ $\rightarrow$ \lstinline+tgeometry+ \\
     \hline
-    merge               & array tgeometry $\rightarrow$ tgeometry \\
+    \lstinline+merge+               & \lstinline+array tgeometry+ $\rightarrow$ \lstinline+tgeometry+ \\
     \hline
     \end{tabularx}
     \caption{Transformation functions}
@@ -186,76 +183,69 @@ Next to changing their duration, temporal geometries can also be transformed by 
 
 A large list of accessor functions exist to retrieve the duration, memory size, individual values, instants, timestamps and more. (Table \ref{table:accessor_funcs})
 
-\begin{table}[h!]
+\begin{table}[htb]
     \centering
     \begin{tabularx}{\textwidth}{|l|X|}
     \hline
     \textbf{Function}   & \textbf{Signature} \\ 
     \hline
-    duration            & tgeometry $\rightarrow$ text\\
+    \lstinline+duration+            & \lstinline+tgeometry+ $\rightarrow$ \lstinline+text+\\
     \hline
-    interpolation       & tgeometry $\rightarrow$ text\\
+    \lstinline+interpolation+       & \lstinline+tgeometry+ $\rightarrow$ \lstinline+text+\\
     \hline
-    memSize             & tgeometry $\rightarrow$ integer \\
+    \lstinline+memSize+             & \lstinline+tgeometry+ $\rightarrow$ \lstinline+integer+ \\
     \hline
-    getValue            & tgeometry(Instant) $\rightarrow$ geometry(Polygon) \\
+    \lstinline+getValue+            & \lstinline+tgeometry(Instant)+ $\rightarrow$ \lstinline+geometry(Polygon)+ \\
     \hline
-    startValue          & tgeometry $\rightarrow$ geometry(Polygon) \\
+    \lstinline+startValue+          & \lstinline+tgeometry+ $\rightarrow$ \lstinline+geometry(Polygon)+ \\
     \hline
-    endValue            & tgeometry $\rightarrow$ geometry(Polygon) \\
+    \lstinline+endValue+            & \lstinline+tgeometry+ $\rightarrow$ \lstinline+geometry(Polygon)+ \\
     \hline
-    getTimestamp        & tgeometry(Instant) $\rightarrow$ timestamptz \\
+    \lstinline+getTimestamp+        & \lstinline+tgeometry(Instant)+ $\rightarrow$ \lstinline+timestamptz+ \\
     \hline
-    getTime             & tgeometry $\rightarrow$ periodset \\
+    \lstinline+getTime+             & \lstinline+tgeometry+ $\rightarrow$ \lstinline+periodset+ \\
     \hline
-    timespan            & tgeometry $\rightarrow$ interval \\
+    \lstinline+timespan+            & \lstinline+tgeometry+ $\rightarrow$ \lstinline+interval+ \\
     \hline
-    shift               & tgeometry $\rightarrow$ tgeometry \\
+    \lstinline+shift+               & \lstinline+tgeometry+ $\rightarrow$ \lstinline+tgeometry+ \\
     \hline
-    num*                & tgeometry $\rightarrow$ integer \\
+    \lstinline+num*+                & \lstinline+tgeometry+ $\rightarrow$ \lstinline+integer+ \\
     \hline
-    start*              & tgeometry $\rightarrow$ * \\
+    \lstinline+start*+              & \lstinline+tgeometry+ $\rightarrow$ \lstinline+*+ \\
     \hline
-    end*                & tgeometry $\rightarrow$ * \\
+    \lstinline+end*+                & \lstinline+tgeometry+ $\rightarrow$ \lstinline+*+ \\
     \hline
-    *N                  & tgeometry x integer $\rightarrow$ *\\
+    \lstinline+*N+                  & \lstinline+tgeometry+ $\times$ \lstinline+integer+ $\rightarrow$ \lstinline+*+ \\
     \hline
-    *s                  & tgeometry $\rightarrow$ array *\\
+    \lstinline+*s+                  & \lstinline+tgeometry+ $\rightarrow$ \lstinline+array *+ \\
     \hline
     \end{tabularx}
     \caption{Accessor functions}
     \label{table:accessor_funcs}
 \end{table}
 
-\textit{Duration} returns one of $\{$\textit{Instant}, \textit{Instant Set}, \textit{Sequence}, \textit{Sequence Set}$\}$, \textit{interval} returns either \textit{Discrete} for instants and instant set, or one of $\{$\textit{Linear}, \textit{Stepwise}$\}$ for sequences and sequence sets, and \textit{memsize} returns the internal memory size in bytes.
+\lstinline{Duration} returns one of $\{$\lstinline{"Instant"}, \lstinline{"Instant Set"}, \lstinline{"Sequence"}, \lstinline{"Sequence Set"}$\}$, \lstinline{interval} returns either \lstinline{"Discrete"} for instants and instant set, or one of $\{$\lstinline{"Linear"}, \lstinline{"Stepwise"}$\}$ for sequences and sequence sets, and \lstinline{memsize} returns the internal memory size in bytes.
 
-Other accessor functions are defined to retrieve individual values, timestamps or sequences from the temporal geometry. In Table \ref{table:accessor_funcs}, all functions containing the symbol '*' are part of a set of functions returning a certain type of element. These functions return the number of that element in the tgeometry, the first, last or Nth element, and an array containing all elements respectively. This set is defined for the \textit{Timestamp}, \textit{Instant} and \textit{Sequence} elements. A complete list of these functions can be found in Appendix \ref{appendix:complete_funct_tables}.
+Other accessor functions are defined to retrieve individual values, timestamps or sequences from the temporal geometry. In Table \ref{table:accessor_funcs}, all functions containing the symbol '*' are part of a set of functions returning a certain type of element. These functions return the number of that element in the \lstinline+tgeometry+, the first, last or Nth element, and an array containing all elements respectively. This set is defined for the \lstinline{Timestamp}, \lstinline{Instant} and \lstinline{Sequence} elements. A complete list of these functions can be found in Appendix \ref{appendix:complete_funct_tables}.
 
 \subsection{Always/Ever Comparison}
 \label{section:always_ever}
 
-The following functions and operators compare a temporal geometry with a fixed region value (Polygon), and return the result of the \textit{ever equals}, \textit{always equals}, \textit{ever not equals} or \textit{always not equals} comparisons. \\
+The following functions and operators compare a temporal geometry with a fixed region value (Polygon), and return the result of the ever equals (\lstinline+ever_eq+), always equals (\lstinline+always_eq+), ever not equals (\lstinline+ever_ne+) or always not equals (\lstinline+always_ne+) comparisons. \\
 
-% Ex: Always equals:
-% \begin{empheq}[box=\mygreybox]{flalign*}
-%     & \text{SELECT tgeometry }'\{\text{Polygon}((0 0, 1 0, 1 1, 0 1, 0 0))@\text{2001-01-01}\}'\ \%=    & \\
-%     & \eqtab\text{geometry } '\text{Polygon}((0 0, 1 0, 1 1, 0 1, 0 0))';                               & \\
-%     & \text{- - true}                                                                                   &
-% \end{empheq}
-
-\begin{table}[h!]
+\begin{table}[htb]
     \centering
     \begin{tabularx}{\textwidth}{|l|l|X|}
     \hline
     \textbf{Function}   & \textbf{Operator} & \textbf{Signature} \\
     \hline
-    ever\_eq    & $?=$      & tgeometry x geometry(Polygon) $\rightarrow$ boolean \\
+    \lstinline+ever_eq+    & \lstinline+?=+      & \lstinline+tgeometry+ $\times$ \lstinline+geometry(Polygon)+ $\rightarrow$ \lstinline+boolean+ \\
     \hline
-    always\_eq  & $\%=$     & tgeometry x geometry(Polygon) $\rightarrow$ boolean \\
+    \lstinline+always_eq+  & \lstinline+\%=+     & \lstinline+tgeometry+ $\times$ \lstinline+geometry(Polygon)+ $\rightarrow$ \lstinline+boolean+ \\
     \hline
-    ever\_ne    & $\&<>$    & tgeometry x geometry(Polygon) $\rightarrow$ boolean \\
+    \lstinline+ever_ne+    & \lstinline+\&<>+    & \lstinline+tgeometry+ $\times$ \lstinline+geometry(Polygon)+ $\rightarrow$ \lstinline+boolean+ \\
     \hline
-    always\_ne  & $\%<>$    & tgeometry x geometry(Polygon) $\rightarrow$ boolean \\
+    \lstinline+always_ne+  & \lstinline+\%<>+    & \lstinline+tgeometry+ $\times$ \lstinline+geometry(Polygon)+ $\rightarrow$ \lstinline+boolean+ \\
     \hline
     \end{tabularx}
     \caption{Always/Ever comparison functions and operators}
@@ -267,48 +257,48 @@ The following functions and operators compare a temporal geometry with a fixed r
 
 These functions are used to restrict a temporal geometry to a given value (restriction functions), or to the complement of that value (difference functions). The given value can range from a single region (Polygon) value to a timestamp, or even a set of period values. The full set of restriction functions is listed in Table \ref{table:restriction_funcs}, and Table \ref{table:diff_funcs} lists the difference functions.
 
-\begin{table}[h!]
+\begin{table}[htb]
     \centering
     \begin{tabularx}{\textwidth}{|l|X|}
     \hline
     \textbf{Function}   & \textbf{Signature} \\ 
     \hline
-    atValue             & tgeometry x geometry $\rightarrow$ tgeometry\\
+    \lstinline+atValue+             & \lstinline+tgeometry+ $\times$ \lstinline+geometry+ $\rightarrow$ \lstinline+tgeometry+\\
     \hline
-    atValues            & tgeometry x array geometry $\rightarrow$ tgeometry\\
+    \lstinline+atValues+            & \lstinline+tgeometry+ $\times$ \lstinline+array geometry+ $\rightarrow$ \lstinline+tgeometry+\\
     \hline
-    atTimestamp         & tgeometry x timestamptz $\rightarrow$ tgeometry \\
+    \lstinline+atTimestamp+         & \lstinline+tgeometry+ $\times$ \lstinline+timestamptz+ $\rightarrow$ \lstinline+tgeometry+ \\
     \hline
-    atTimestampSet      & tgeometry x timestampset $\rightarrow$ tgeometry \\
+    \lstinline+atTimestampSet+      & \lstinline+tgeometry+ $\times$ \lstinline+timestampset+ $\rightarrow$ \lstinline+tgeometry+ \\
     \hline
-    atPeriod            & tgeometry x period $\rightarrow$ tgeometry \\
+    \lstinline+atPeriod+            & \lstinline+tgeometry+ $\times$ \lstinline+period+ $\rightarrow$ \lstinline+tgeometry+ \\
     \hline
-    atPeriodSet         & tgeometry x periodset $\rightarrow$ tgeometry \\
+    \lstinline+atPeriodSet+         & \lstinline+tgeometry+ $\times$ \lstinline+periodset+ $\rightarrow$ \lstinline+tgeometry+ \\
     \hline
     \end{tabularx}
     \caption{Restriction functions}
     \label{table:restriction_funcs}
 \end{table}
 
-For example, if we want to remove the data in a temporal geometry between to given timestamps, we can use the \textit{minusPeriod} function with as second argument a period starting at the first and ending at the second timestamp.
+For example, if we want to remove the data in a temporal geometry between to given timestamps, we can use the \lstinline{minusPeriod} function with as second argument a period starting at the first and ending at the second timestamp.
 
-\begin{table}[h!]
+\begin{table}[htb]
     \centering
     \begin{tabularx}{\textwidth}{|l|X|}
     \hline
     \textbf{Function}   & \textbf{Signature} \\ 
     \hline
-    minusValue             & tgeometry x geometry $\rightarrow$ tgeometry\\
+    \lstinline+minusValue+             & \lstinline+tgeometry+ $\times$ \lstinline+geometry+ $\rightarrow$ \lstinline+tgeometry+\\
     \hline
-    minusValues            & tgeometry x array geometry $\rightarrow$ tgeometry\\
+    \lstinline+minusValues+            & \lstinline+tgeometry+ $\times$ \lstinline+array geometry+ $\rightarrow$ \lstinline+tgeometry+\\
     \hline
-    minusTimestamp         & tgeometry x timestamptz $\rightarrow$ tgeometry \\
+    \lstinline+minusTimestamp+         & \lstinline+tgeometry+ $\times$ \lstinline+timestamptz+ $\rightarrow$ \lstinline+tgeometry+ \\
     \hline
-    minusTimestampSet      & tgeometry x timestampset $\rightarrow$ tgeometry \\
+    \lstinline+minusTimestampSet+      & \lstinline+tgeometry+ $\times$ \lstinline+timestampset+ $\rightarrow$ \lstinline+tgeometry+ \\
     \hline
-    minusPeriod            & tgeometry x period $\rightarrow$ tgeometry \\
+    \lstinline+minusPeriod+            & \lstinline+tgeometry+ $\times$ \lstinline+period+ $\rightarrow$ \lstinline+tgeometry+ \\
     \hline
-    minusPeriodSet         & tgeometry x periodset $\rightarrow$ tgeometry \\
+    \lstinline+minusPeriodSet+         & \lstinline+tgeometry+ $\times$ \lstinline+periodset+ $\rightarrow$ \lstinline+tgeometry+ \\
     \hline
     \end{tabularx}
     \caption{Difference functions}
@@ -318,27 +308,27 @@ For example, if we want to remove the data in a temporal geometry between to giv
 \subsection{Comparison Operators}
 \label{section:comparison_funcs}
 
-A set of comparison operators is defined in PostgreSQL, and they have been extended to accept arguments of type temporal geometry. In practice, only the $=$ (equals) and $<>$ (not equals) operators are useful for real-world applications, but the other operators are used internally to create B-tree indexes on the tgeometry type.
+A set of comparison operators is defined in PostgreSQL, and they have been extended to accept arguments of type temporal geometry. In practice, only the \lstinline+=+ (equals) and \lstinline+<>+ (not equals) operators are useful for real-world applications, but the other operators are used internally to create B-tree indexes on the \lstinline+tgeometry+ type.
 
-\begin{table}[h!]
+\begin{table}[htb]
     \centering
     \begin{tabularx}{\textwidth}{|l|l|X|}
     \hline
     \textbf{Function}   & \textbf{Operator} & \textbf{Signature} \\
     \hline
-    tgeometry\_lt    & $<$   & tgeometry x tgeometry $\rightarrow$ boolean \\
+    \lstinline+tgeometry_lt+    & \lstinline+<+    & \lstinline+tgeometry+ $\times$ \lstinline+tgeometry+ $\rightarrow$ \lstinline+boolean+ \\
     \hline
-    tgeometry\_le    & $<=$   & tgeometry x tgeometry $\rightarrow$ boolean \\
+    \lstinline+tgeometry_le+    & \lstinline+<=+   & \lstinline+tgeometry+ $\times$ \lstinline+tgeometry+ $\rightarrow$ \lstinline+boolean+ \\
     \hline
-    tgeometry\_eq    & $=$   & tgeometry x tgeometry $\rightarrow$ boolean \\
+    \lstinline+tgeometry_eq+    & \lstinline+=+    & \lstinline+tgeometry+ $\times$ \lstinline+tgeometry+ $\rightarrow$ \lstinline+boolean+ \\
     \hline
-    tgeometry\_ne    & $<>$   & tgeometry x tgeometry $\rightarrow$ boolean \\
+    \lstinline+tgeometry_ne+    & \lstinline+<>+   & \lstinline+tgeometry+ $\times$ \lstinline+tgeometry+ $\rightarrow$ \lstinline+boolean+ \\
     \hline
-    tgeometry\_ge    & $>=$   & tgeometry x tgeometry $\rightarrow$ boolean \\
+    \lstinline+tgeometry_ge+    & \lstinline+>=+   & \lstinline+tgeometry+ $\times$ \lstinline+tgeometry+ $\rightarrow$ \lstinline+boolean+ \\
     \hline
-    tgeometry\_gt    & $>$   & tgeometry x tgeometry $\rightarrow$ boolean \\
+    \lstinline+tgeometry_gt+    & \lstinline+>+    & \lstinline+tgeometry+ $\times$ \lstinline+tgeometry+ $\rightarrow$ \lstinline+boolean+ \\
     \hline
-    tgeometry\_cmp    & & tgeometry x tgeometry $\rightarrow$ integer \\
+    \lstinline+tgeometry_cmp+   &                  & \lstinline+tgeometry+ $\times$ \lstinline+tgeometry+ $\rightarrow$ \lstinline+integer+ \\
     \hline
     \end{tabularx}
     \caption{Comparison functions and operators}
@@ -350,15 +340,15 @@ A set of comparison operators is defined in PostgreSQL, and they have been exten
 
 The previous equality and inequality operators returned a single boolean value, but we might also be interested in knowing when two temporal geometries are equal or when they differ as a function of time. The following two operators return a temporal bool representing the result over time of the equality or inequality operator on the input values.
 
-\begin{table}[h!]
+\begin{table}[htb]
     \centering
     \begin{tabularx}{\textwidth}{|l|l|X|}
     \hline
     \textbf{Function}   & \textbf{Operator} & \textbf{Signature} \\
     \hline
-    tgeo\_eq    & $\#=$   & \{tgeometry, geometry(Polygon)\} x \{tgeometry, geometry(Polygon)\} $\rightarrow$ tbool \\
+    \lstinline+tgeo_eq+    & \lstinline+\#=+   & \lstinline+\{tgeometry, geometry(Polygon)\}+ $\times$ \lstinline+\{tgeometry, geometry(Polygon)\}+ $\rightarrow$ \lstinline+tbool+ \\
     \hline
-    tgeo\_ne    & $\#<>$  & \{tgeometry, geometry(Polygon)\} x \{tgeometry, geometry(Polygon)\} $\rightarrow$ tbool \\
+    \lstinline+tgeo_ne+    & \lstinline+\#<>+  & \lstinline+\{tgeometry, geometry(Polygon)\}+ $\times$ \lstinline+\{tgeometry, geometry(Polygon)\}+ $\rightarrow$ \lstinline+tbool+ \\
     \hline
     \end{tabularx}
     \caption{Comparison functions and operators}
@@ -370,44 +360,44 @@ The previous equality and inequality operators returned a single boolean value, 
 
 As has been done for the temporal points previously in MobilityDB (briefly described in Section \ref{section:mobilitydb_functions}), multiple spatial functions similar to those defined in PostGIS are exposed. 
 
-Table \ref{table:spatial_funcs} shows a non-exhaustive list of spatial functions that can be applied to the tgeometry type.
+Table \ref{table:spatial_funcs} shows a non-exhaustive list of spatial functions that can be applied to the \lstinline+tgeometry+ type.
 
-\begin{table}[h!]
+\begin{table}[htb]
     \centering
     \begin{tabularx}{\textwidth}{|l|X|}
     \hline
     \textbf{Function}   & \textbf{Signature} \\ 
     \hline
-    traversed\_area      & tgeometry $\rightarrow$ geometry(Polygon)\\
+    \lstinline+traversed_area+      & \lstinline+tgeometry+ $\rightarrow$ \lstinline+geometry(Polygon)+\\
     \hline
-    centroid            & tgeometry $\rightarrow$ tgeompoint\\
+    \lstinline+centroid+            & \lstinline+tgeometry+ $\rightarrow$ \lstinline+tgeompoint+\\
     \hline
-    rotation\_speed      & tgeometry $\rightarrow$ tfloat \\
+    \lstinline+rotation_speed+      & \lstinline+tgeometry+ $\rightarrow$ \lstinline+tfloat+ \\
     \hline
-    nearestApproachDistance & \{tgeometry, geometry(Polygon)\} x \{tgeometry, geometry(Polygon)\} $\rightarrow$ float \\
+    \lstinline+nearestApproachDistance+ & \lstinline+\{tgeometry, geometry(Polygon)\}+ $\times$ \lstinline+\{tgeometry, geometry(Polygon)\}+ $\rightarrow$ \lstinline+float+ \\
     \hline
-    nearestApproachInstant  & \{tgeometry, geometry(Polygon)\} x \{tgeometry, geometry(Polygon)\} $\rightarrow$ tgeometry(Instant) \\
+    \lstinline+nearestApproachInstant+  & \lstinline+\{tgeometry, geometry(Polygon)\}+ $\times$ \lstinline+\{tgeometry, geometry(Polygon)\}+ $\rightarrow$ \lstinline+tgeometry(Instant)+ \\
     \hline
-    shortestLine         & \{tgeometry, geometry(Polygon)\} x \{tgeometry, geometry(Polygon)\} $\rightarrow$ geometry(LineString) \\
+    \lstinline+shortestLine+         & \lstinline+\{tgeometry, geometry(Polygon)\}+ $\times$ \lstinline+\{tgeometry, geometry(Polygon)\}+ $\rightarrow$ \lstinline+geometry(LineString)+ \\
     \hline
-    distance         & \{tgeometry, geometry(Polygon)\} x \{tgeometry, geometry(Polygon)\} $\rightarrow$ tfloat \\
+    \lstinline+distance+         & \lstinline+\{tgeometry, geometry(Polygon)\}+ $\times$ \lstinline+\{tgeometry, geometry(Polygon)\}+ $\rightarrow$ \lstinline+tfloat+ \\
     \hline
     \end{tabularx}
     \caption{Spatial functions}
     \label{table:spatial_funcs}
 \end{table}
 
-The \textit{traversed area} function returns a polygon representing the area traversed by the moving region. The computation of this area is described in Section \ref{section:traversed_area}.
+The \lstinline{traversed_area} function returns a polygon representing the area traversed by the moving region. The computation of this area is described in Section \ref{section:traversed_area}.
 
-\textit{Centroid} is a variant of the \textit{ST\_Centroid} PostGIS function, returning the evolution of the centroid of a temporal region. Since in our case the centroid is assumed to be the center of rotation, it moves linearly between two defined instants, and a temporal point containing the position of the centroid of a temporal region can thus be easily computed and returned.
+\lstinline{Centroid} is a variant of the \lstinline{ST_Centroid} PostGIS function, returning the evolution of the centroid of a temporal region. Since in our case the centroid is assumed to be the center of rotation, it moves linearly between two defined instants, and a temporal point containing the position of the centroid of a temporal region can thus be easily computed and returned.
 
-Computing the translation or rotation speed of a polygon can also be of interest, but since the translation speed can be retrieved by applying the \textit{speed} function (defined for temporal points) on the centroid of the moving region, only the rotation speed has to be handled. This is thus returned by the \textit{rotation\_speed} function, which returns a temporal float. Since we assume linear interpolation between instants, the rotation speed is assumed to be constants between to instants.
+Computing the translation or rotation speed of a polygon can also be of interest, but since the translation speed can be retrieved by applying the \lstinline{speed} function (defined for temporal points) on the centroid of the moving region, only the rotation speed has to be handled. This is thus returned by the \lstinline{rotation_speed} function, which returns a temporal float. Since we assume linear interpolation between instants, the rotation speed is assumed to be constants between to instants.
 
 The four last functions return respectively the smallest distance possible between the two (temporal) regions, the instant from the first temporal region at which this distance was attained, a segment going from the first region to the second at their closest instant, and finally a temporal float representing the evolution of the distance between the two regions during their movement. 
 
-The three first functions (\textit{nearestApproachDistance}, \textit{nearestApproachInstant} and \textit{shortestLine}) can be implemented easily if the \textit{distance} function exists. Indeed, if we have a tfloat value representing the result of the distance function applied to two (moving) regions, we can use already defined functions on the tfloat type to find the minimum value, or the instant at which this minimum value is obtained, which solves the first two problems. After computing the position of both regions when they were at their closest, we can then also use a PostGIS spatial function to compute the smallest line joining these polygons, which is the result of the third question.
+The three first functions (\lstinline{nearestApproachDistance}, \lstinline{nearestApproachInstant} and \lstinline{shortestLine}) can be implemented easily if the \lstinline{distance} function exists. Indeed, if we have a \lstinline+tfloat+ value representing the result of the distance function applied to two (moving) regions, we can use already defined functions on the \lstinline+tfloat+ type to find the minimum value, or the instant at which this minimum value is obtained, which solves the first two problems. After computing the position of both regions when they were at their closest, we can then also use a PostGIS spatial function to compute the smallest line joining these polygons, which is the result of the third question.
 
-This leaves us with the implementation of the \textit{distance} function, which, due to its complexity and time constraints, is left as future work.
+This leaves us with the implementation of the \lstinline{distance} function, which, due to its complexity and time constraints, is left as future work.
 
 \subsection{Bounding Box Functions and Operators}
 \label{section:bbox_funcs}
@@ -416,29 +406,29 @@ Bounding boxes are precomputed for temporal geometries of instant set, sequence 
 
 Computing this bounding box is relatively tricky when the temporal geometry is a sequence or a sequence set, since the bounding box is not simply the union of the bounding boxes of all instants. Section \ref{section:bbox} explains how the bounding boxes of moving regions can be computed in two different ways.
 
-Some bounding box operators are also exposed to the user . These operators are polymorphic and allow all types of input that can be casted into an spatio-temporal box (STbox). 
+Some bounding box operators are also exposed to the user . These operators are polymorphic and allow all types of input that can be casted into a spatio-temporal box (\lstinline+STbox+). 
 
-\begin{table}[h!]
+\begin{table}[htb]
     \centering
     \begin{tabularx}{\textwidth}{|l|l|X|}
     \hline
     \textbf{Function}   & \textbf{Operator} & \textbf{Signature} \\ 
     \hline
-    stbox               & & tgeometry $\rightarrow$ stbox\\
+    \lstinline+stbox+               & & \lstinline+tgeometry+ $\rightarrow$ \lstinline+stbox+\\
     \hline
-    expandSpatial       & & tgeometry x float $\rightarrow$ stbox\\
+    \lstinline+expandSpatial+       & & \lstinline+tgeometry+ $\times$ \lstinline+float+ $\rightarrow$ \lstinline+stbox+\\
     \hline
-    expandTemporal      & & tgeometry x interval $\rightarrow$ stbox \\
+    \lstinline+expandTemporal+      & & \lstinline+tgeometry+ $\times$ \lstinline+interval+ $\rightarrow$ \lstinline+stbox+ \\
     \hline
-    contains\_bbox      & $@>$ & \{tgeometry, geometry, stbox\} x \{tgeometry, geometry, stbox\} $\rightarrow$ stbox \\
+    \lstinline+contains_bbox+      & \lstinline+@>+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+stbox+ \\
     \hline
-    contained\_bbox     & $<@$ & \{tgeometry, geometry, stbox\} x \{tgeometry, geometry, stbox\} $\rightarrow$ stbox \\
+    \lstinline+contained_bbox+     & \lstinline+<@+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+stbox+ \\
     \hline
-    overlaps\_bbox      & $\&\&$ & \{tgeometry, geometry, stbox\} x \{tgeometry, geometry, stbox\} $\rightarrow$ stbox \\
+    \lstinline+overlaps_bbox+      & \lstinline+\&\&+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+stbox+ \\
     \hline
-    same\_bbox          & $\sim=$ & \{tgeometry, geometry, stbox\} x \{tgeometry, geometry, stbox\} $\rightarrow$ stbox \\
+    \lstinline+same_bbox+          & \lstinline+$\sim$=+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+stbox+ \\
     \hline
-    adjacent\_bbox      & $-\mid-$ & \{tgeometry, geometry, stbox\} x \{tgeometry, geometry, stbox\} $\rightarrow$ stbox \\
+    \lstinline+adjacent_bbox+      & \lstinline+-$\mid$-+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+stbox+ \\
     \hline
     \end{tabularx}
     \caption{Bounding box functions and operators}

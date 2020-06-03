@@ -8,49 +8,49 @@
         \hline
         \textbf{Function}   & \textbf{Signature} \\ 
         \hline
-        duration            & tgeometry $\rightarrow$ text\\
+        \lstinline+duration+            & \lstinline+tgeometry+ $\rightarrow$ \lstinline+text+\\
         \hline
-        interpolation       & tgeometry $\rightarrow$ text\\
+        \lstinline+interpolation+       & \lstinline+tgeometry+ $\rightarrow$ \lstinline+text+\\
         \hline
-        memSize             & tgeometry $\rightarrow$ integer \\
+        \lstinline+memSize+             & \lstinline+tgeometry+ $\rightarrow$ \lstinline+integer+ \\
         \hline
-        getValue            & tgeometry(Instant) $\rightarrow$ geometry(Polygon) \\
+        \lstinline+getValue+            & \lstinline+tgeometry(Instant)+ $\rightarrow$ \lstinline+geometry(Polygon)+ \\
         \hline
-        startValue          & tgeometry $\rightarrow$ geometry(Polygon) \\
+        \lstinline+startValue+          & \lstinline+tgeometry+ $\rightarrow$ \lstinline+geometry(Polygon)+ \\
         \hline
-        endValue            & tgeometry $\rightarrow$ geometry(Polygon) \\
+        \lstinline+endValue+            & \lstinline+tgeometry+ $\rightarrow$ \lstinline+geometry(Polygon)+ \\
         \hline
-        getTimestamp        & tgeometry(Instant) $\rightarrow$ timestamptz \\
+        \lstinline+getTimestamp+        & \lstinline+tgeometry(Instant)+ $\rightarrow$ \lstinline+timestamptz+ \\
         \hline
-        getTime             & tgeometry $\rightarrow$ periodset \\
+        \lstinline+getTime+             & \lstinline+tgeometry+ $\rightarrow$ \lstinline+periodset+ \\
         \hline
-        timespan            & tgeometry $\rightarrow$ interval \\
+        \lstinline+timespan+            & \lstinline+tgeometry+ $\rightarrow$ \lstinline+interval+ \\
         \hline
-        shift               & tgeometry $\rightarrow$ tgeometry \\
+        \lstinline+shift+               & \lstinline+tgeometry+ $\rightarrow$ \lstinline+tgeometry+ \\
         \hline
-        numInstants         & tgeometry $\rightarrow$ integer \\
+        \lstinline+numInstants+         & \lstinline+tgeometry+ $\rightarrow$ \lstinline+integer+ \\
         \hline
-        startInstant        & tgeometry $\rightarrow$ tgeometry(Instant) \\
+        \lstinline+startInstant+        & \lstinline+tgeometry+ $\rightarrow$ \lstinline+tgeometry(Instant)+ \\
         \hline
-        endInstant          & tgeometry $\rightarrow$ tgeometry(Instant) \\
+        \lstinline+endInstant+          & \lstinline+tgeometry+ $\rightarrow$ \lstinline+tgeometry(Instant)+ \\
         \hline
-        instantN            & tgeometry x integer $\rightarrow$ tgeometry(Instant) \\
+        \lstinline+instantN+            & \lstinline+tgeometry+ $\times$ \lstinline+integer+ $\rightarrow$ \lstinline+tgeometry(Instant)+ \\
         \hline
-        instants            & tgeometry $\rightarrow$ array tgeometry(Instant) \\
+        \lstinline+instants+            & \lstinline+tgeometry+ $\rightarrow$ \lstinline+array tgeometry(Instant)+ \\
         \hline
-        numTimestamps       & tgeometry $\rightarrow$ integer \\
+        \lstinline+numTimestamps+       & \lstinline+tgeometry+ $\rightarrow$ \lstinline+integer+ \\
         \hline
-        startTimestamp      & tgeometry $\rightarrow$ timestamptz \\
+        \lstinline+startTimestamp+      & \lstinline+tgeometry+ $\rightarrow$ \lstinline+timestamptz+ \\
         \hline
-        endTimestamp        & tgeometry $\rightarrow$ timestamptz \\
+        \lstinline+endTimestamp+        & \lstinline+tgeometry+ $\rightarrow$ \lstinline+timestamptz+ \\
         \hline
-        timestampN          & tgeometry x integer $\rightarrow$ timestamptz \\
+        \lstinline+timestampN+          & \lstinline+tgeometry+ $\times$ \lstinline+integer+ $\rightarrow$ \lstinline+timestamptz+ \\
         \hline
-        timestamps          & tgeometry $\rightarrow$ array timestamptz \\
+        \lstinline+timestamps+          & \lstinline+tgeometry+ $\rightarrow$ \lstinline+array timestamptz+ \\
         \hline
         \end{tabularx}
 \end{subtable}
-\caption{Transformation functions}
+\caption{Transformation functions (complete)}
 \label{table:transformation_funcs_complete}
 \end{table}
 
@@ -64,17 +64,17 @@
     \hline
     \textbf{Function}   & \textbf{Signature} \\ 
     \hline
-    numSequences        & tgeometry $\rightarrow$ integer \\
+    \lstinline+numSequences+        & \lstinline+tgeometry+ $\rightarrow$ \lstinline+integer+ \\
     \hline
-    startSequence       & tgeometry $\rightarrow$ tgeometry(Sequence) \\
+    \lstinline+startSequence+       & \lstinline+tgeometry+ $\rightarrow$ \lstinline+tgeometry(Sequence)+ \\
     \hline
-    endSequence         & tgeometry $\rightarrow$ tgeometry(Sequence) \\
+    \lstinline+endSequence+         & \lstinline+tgeometry+ $\rightarrow$ \lstinline+tgeometry(Sequence)+ \\
     \hline
-    SequenceN           & tgeometry x integer $\rightarrow$ tgeometry(Sequence) \\
+    \lstinline+SequenceN+           & \lstinline+geometry+ $\times$ \lstinline+integer+ $\rightarrow$ \lstinline+tgeometry(Sequence)+ \\
     \hline
-    Sequences           & tgeometry $\rightarrow$ array tgeometry(Sequence) \\
+    \lstinline+Sequences+           & \lstinline+tgeometry+ $\rightarrow$ \lstinline+array tgeometry(Sequence)+ \\
     \hline
     \end{tabularx}
 \end{subtable}
-\caption{Transformation functions, continued}
+\caption{Transformation functions (complete), continued}
 \end{table}

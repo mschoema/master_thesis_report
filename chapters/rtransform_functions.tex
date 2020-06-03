@@ -1,11 +1,9 @@
 %!TEX root = ../main.tex
 
-\newpage
-
-\section{Utility Functions for Tgeometry and Rtransform Types}
+\section{Utility Functions for \texttt{tgeometry} and \texttt{rtransform} Types}
 \label{section:utility_rtransform}
 
-Before diving into the implementation of the general MoblityDB functions that have to be adapted to handle moving regions as well as all the types already present, we will first talk about a set of functions specific to the tgeometry and rtransform types.
+Before diving into the implementation of the general MoblityDB functions that have to be adapted to handle moving regions as well as all the types already present, we will first talk about a set of functions specific to the \lstinline{tgeometry} and \lstinline{rtransform} types.
 
 These functions can be called utility functions, since they are not presented to the user as an SQL function, but they are used in the backend a lot to simplify other functions. Table \ref{table:rtransform_functions} shows a list of these functions with their signature (input and output types).
 
@@ -15,34 +13,34 @@ These functions can be called utility functions, since they are not presented to
     \hline
     \textbf{Functions}  & \textbf{Signature} \\ 
     \hline
-    compute             & polygon    x polygon              $\rightarrow$ rtransform \\
-    apply               & rtransform x polygon              $\rightarrow$ polygon \\
+    \lstinline+compute+ & \lstinline+polygon+ $\times$ \lstinline+polygon+ $\rightarrow$ \lstinline+rtransform+ \\
+    \lstinline+apply+ & \lstinline+rtransform+ $\times$ \lstinline+polygon+ $\rightarrow$ \lstinline+polygon+ \\
     \hline
-    interpolate         & rtransform x rtransform x double  $\rightarrow$ rtransform \\
-    interpolate long    & rtransform x rtransform x double  $\rightarrow$ rtransform \\
+    \lstinline+interpolate+ & \lstinline+rtransform+ $\times$ \lstinline+rtransform+ $\times$ \lstinline+double+  $\rightarrow$ \lstinline+rtransform+ \\
+    \lstinline+interpolate_long+ & \lstinline+rtransform+ $\times$ \lstinline+rtransform+ $\times$ \lstinline+double+  $\rightarrow$ \lstinline+rtransform+ \\
     \hline
-    combine             & rtransform x rtransform           $\rightarrow$ rtransform \\
-    diff                & rtransform x rtransform           $\rightarrow$ rtransform \\
+    \lstinline+combine+ & \lstinline+rtransform+ $\times$ \lstinline+rtransform+ $\rightarrow$ \lstinline+rtransform+ \\
+    \lstinline+diff+ & \lstinline+rtransform+ $\times$ \lstinline+rtransform+ $\rightarrow$ \lstinline+rtransform+ \\
     \hline
     \end{tabular}
-    \caption{Utility functions for the \textit{rtransform} type}
+    \caption{Utility functions for the \lstinline{rtransform} type}
     \label{table:rtransform_functions}
 \end{table}
 
 \subsection{Compute}
 \label{section:compute}
 
-The \textit{compute} function takes two polygon values as input and computes the transformation from the first to the second one. For example, taking the two polygons shown below as input, with the blue polygon being the first argument and the red polygon being the second, the resulting rtransform will be $\mathcal{T}:\ (1,\ \frac{1}{3},\ \frac{-\pi}{2})$.
+The \lstinline{compute} function takes two polygon values as input and computes the transformation from the first to the second one. For example, taking the two polygons shown below as input, with the blue polygon being the first argument and the red polygon being the second, the resulting \lstinline{rtransform} will be $\mathcal{T}:\ (1,\ \frac{1}{3},\ \frac{-\pi}{2})$.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.6\textwidth]{images/example_simple_transformation.png}
-    \caption{Example polygons used in the \textit{compute} function}
+    \caption{Example polygons used in the \lstinline{compute} function}
     \label{fig:example_compute}
 \end{figure}
 
 
-As said previously the type used to represent a region value is the PostGIS type \textit{Geometry(Polygon)}. This polygon type is defined using rings: one outer ring, and zero or more inner rings defining holes in the polygon. One assumption that we make when receiving the polygons as input is that two polygons of the same shape have their corresponding points defined at the same position in the rings of said polygons. 
+As said previously the type used to represent a region value is the PostGIS type \lstinline{Geometry(Polygon)}. This polygon type is defined using rings: one outer ring, and zero or more inner rings defining holes in the polygon. One assumption that we make when receiving the polygons as input is that two polygons of the same shape have their corresponding points defined at the same position in the rings of said polygons. 
 
 The rings are defined as lists of points, with the first and the last points being equal to denote that the ring is closed. Our previous assumption thus says that the $i$'th point in the list defining the outer ring of the first polygon, has to correspond to the $i$'th point in the list defining the outer ring of the second polygon, after application of the correct transformation.
 
@@ -78,10 +76,9 @@ Using the notation
         b = \sin(\theta) \\
         c = v^x          \\
         d = v^y          \\
-    \end{cases}
+    \end{cases}, 
 \]
-
-, and by taking the first two points of the outer rings of both input polygons, we have the following list of equations:
+and by taking the first two points of the outer rings of both input polygons, we have the following list of equations:
 
 \[
     \begin{cases}
@@ -89,12 +86,11 @@ Using the notation
         a*y_1 + b*x_1 + d = y_1' \\
         a*x_2 - b*y_2 + c = x_2' \\
         a*y_2 + b*x_2 + d = y_2' \\
-    \end{cases}
+    \end{cases}, 
 \]
+with $(x_1, y_1)$ and $(x_2, y_2)$ being the first two points of the first polygon, and $(x_1', y_1')$ and $(x_2', y_2')$ being the corresponding points on the second polygon.
 
-, with $(x_1, y_1)$ and $(x_2, y_2)$ being the first two points of the first polygon, and $(x_1', y_1')$ and $(x_2', y_2')$ being the corresponding points on the second polygon.
-
-We can then solve these equations for $a$, $b$, $c$ and $d$.
+We can then solve these equations for $a$, $b$, $c$ and $d$:
 
 \[
     \begin{cases}
@@ -102,10 +98,9 @@ We can then solve these equations for $a$, $b$, $c$ and $d$.
         b = \frac{(y_1' - y_2')*(x_1 - x_2) - (x_1' - x_2')*(y_1 - y_2)}{(x_1 - x_2)^2 + (y_1 - y_2)^2}\\
         c = x_1' - a*x_1 + b*y_1 \\
         d = y_1' - a*y_1 - b*x_1 \\
-    \end{cases}
+    \end{cases}, 
 \]
-
-And finally we can get the parameters of the transformation.
+and finally we can get the parameters of the transformation: 
 
 \[
     \begin{cases}
@@ -122,34 +117,31 @@ When we also need to verify that both input polygons have the same shape, we can
 \subsection{Apply}
 \label{section:apply}
 
-This \textit{apply} function does the opposite of the \textit{compute} function. Given an rtransform, and a start polygon, it applies the transformation to retrieve the end polygon. This is done using a PostGIS function called \textit{ST\_Affine}, which applies an affine transformation to the given geometry. 
+This \lstinline{apply} function does the opposite of the \lstinline{compute} function. Given an \lstinline{rtransform}, and a start polygon, it applies the transformation to retrieve the end polygon. This is done using a PostGIS function called \lstinline{ST_Affine}, which applies an affine transformation to the given geometry. 
 
 Applying an affine transformation again means rotating around the origin, so we first have to translate the polygon to have its centroid at the origin, then we can apply the given transformation, and finally we apply the inverse of the first translation to get the final polygon.
-
-\note{Maybe equations or examples?}
 
 \subsection{Interpolate}
 \label{section:interpolate}
 
 This function is used when we have a polygon defined at time $t_1$ and another one defined at time $t_2$, and we want to retrieve the position of the polygon at time $t$, where $t_1 < t < t_2$ using linear interpolation. Of course, when using stepwise interpolation this function is not needed, since, if we are looking for the polygon at time $t$, where $t_1 < t < t_2$, the needed polygon is simply the one defined at time $t_1$.
 
-If we wanted to interpolate two polygons using linear interpolation between their vertices, we would not keep the fixed-shape aspect of the polygon, as is in Figure \ref{fig:vertices_interpolation}. For this reason, the interpolation is done on the rtransforms defining the position of the polygon at times $t_1$ and $t_2$ with respect to a certain reference polygon.
+If we wanted to interpolate two polygons using linear interpolation between their vertices, we would not keep the fixed-shape aspect of the polygon, as is in Figure \ref{fig:vertices_interpolation}. For this reason, the interpolation is done on the \lstinline{rtransforms} defining the position of the polygon at times $t_1$ and $t_2$ with respect to a certain reference polygon.
 
-For example, using a tgeometryseq with three instants defined at times $t_0$, $t_1$ and $t_2$
+For example, using a \lstinline{tgeometryseq} with three instants defined at times $t_0$, $t_1$ and $t_2$: 
 
 \[
-    '[\mathcal{R}_0@t_0,\ \mathcal{T}_1@t_1,\ \mathcal{T}_2@t_2]'
+    '[\mathcal{R}_0@t_0,\ \mathcal{T}_1@t_1,\ \mathcal{T}_2@t_2]', 
 \]
+suppose that we want to compute the position of the region at time $t_1 < t < t_2$. To do this, we first apply the \lstinline{interpolate} function with $\mathcal{T}_1$ and $\mathcal{T}_2$ a arguments, and then apply the resulting \lstinline{rtransform} to $\mathcal{R}_0$ to get the result.
 
-, suppose that we want to compute the position of the region at time $t_1 < t < t_2$. To do this, we first apply the \textit{interpolate} function with $\mathcal{T}_1$ and $\mathcal{T}_2$ a arguments, and then apply the resulting rtransform to $\mathcal{R}_0$ to get the result.
-
-The \textit{interpolate} functions takes three input arguments. The first two arguments are the initial and final rtransform values. The third argument is a \textit{ratio} value defined by the timestamp of the resulting rtransform. This ratio is always between 0 and 1, and is computed as follows.
+The \lstinline{interpolate} functions takes three input arguments. The first two arguments are the initial and final \lstinline{rtransform} values. The third argument is a ratio value defined by the timestamp of the resulting \lstinline+rtransform+. This ratio is always between 0 and 1, and is computed as follows.
 
 \[
     ratio = \frac{t - t_1}{t_2 - t_1}
 \]
 
-Since we assume linear interpolation between the rtransform values, we will simply use linear interpolation to compute the resulting translation value.
+Since we assume linear interpolation between the \lstinline{rtransform} values, we will simply use linear interpolation to compute the resulting translation value.
 
 \[
     \begin{cases}
@@ -159,9 +151,6 @@ Since we assume linear interpolation between the rtransform values, we will simp
 \]
 
 The interpolation of the angle of rotation on the other hand is slightly more complicated. We are still interpolating linearly, but we have to take into account that the angles $-\pi$ and $\pi$ correspond to the same rotation. This means that there are always two possibilities for the interpolation. Either go directly from $\theta_1$ to $\theta_2$ or go from $\theta_1$ to $-\pi$ (if $\theta_1 < \theta_2$) and then from $\pi$ to $\theta_2$. Both are valid interpolations, but one is shorter than the other. The shorter option is the option that will be taken for the interpolation of the angles.
-
-% xtick={-3.14159, -1.5708, -0.5, 0, 1.5708, 2.5, 3.14159},
-% xticklabels={$-\pi$, $-\frac{\pi}{2}$, $\theta_1$, $0$, $\frac{\pi}{2}$, $\theta_2$, $\pi$},
 
 \begin{figure}[h!]
 \centering
@@ -314,7 +303,7 @@ Computing the interpolated angle is then done using one of the four equations be
 
 Finally, if the resulting angle is larger than $\pi$, we subtract $2\pi$ from it to keep the angle between $-\pi$ and $\pi$.
 
-As a last remark, if the difference between the start and end angle is exactly $\pi$, we always interpolate in a counter-clockwise manner. This means that when $\theta_1 < \theta_2$, the interpolation goes through $0$, and otherwise the interpolation goes through $\pi$.
+As a last remark, if the difference between the start and end angle is exactly $\pi$, we always interpolate in a counter-clockwise manner. This means that when $\theta_1 < \theta_2$, the interpolation goes through $0$, and otherwise it goes through $\pi$.
 
 \begin{figure}[h!]
 \centering
@@ -352,12 +341,12 @@ As a last remark, if the difference between the start and end angle is exactly $
 \subsection{Interpolate Long}
 \label{section:interpolate_long}
 
-The \textit{interpolate long} function does the same as the \textit{interpolate} function, except that during the interpolation of the angles, it always takes the longest arc instead of the smallest. This function will be useful in Section \ref{section:normalization}, when normalizing a tgeometryseq.
+The \lstinline{interpolate_long} function does the same as the \lstinline{interpolate} function, except that during the interpolation of the angles, it always takes the longest arc instead of the smallest. This function will be useful in Section \ref{section:normalization}, when normalizing a \lstinline{tgeometryseq}.
 
 \subsection{Combine}
 \label{section:combine}
 
-The \textit{combine} function essentially does an addition of two rtransform value. With the input rtransform objects being written as $(v_1^x,\ v_1^y,\ \theta_1)$ and $(v_2^x,\ v_2^y,\ \theta_2)$, the resulting rtransform is computed as:
+The \lstinline{combine} function essentially does an addition of two \lstinline{rtransform} value. With the input \lstinline{rtransform} objects being written as $(v_1^x,\ v_1^y,\ \theta_1)$ and $(v_2^x,\ v_2^y,\ \theta_2)$, the resulting \lstinline{rtransform} is computed as:
 
 \begin{align*}
         & v^x = v_1^x + v_2^x \\
@@ -370,19 +359,12 @@ The \textit{combine} function essentially does an addition of two rtransform val
         \end{cases}
 \end{align*}
 
-This function is used when we need to change the start/reference region of the rtransform, for example when we need to merge two tgeometryi. 
-
-\begin{flalign*}
-    & \text{merge(}\{\mathcal{R}_0@t_0,\ \mathcal{T}_1@t_1\},\ \{\mathcal{R}_0'@t_2,\ \mathcal{T}_1'@t_3\}) &&\\
-    & \text{-- -- }\ '\{\mathcal{R}_0@t_0,\ \mathcal{T}_1@t_1,\ \mathcal{T}_2@t_2,\ \mathcal{T}_3@t_3\}'\ \text{-- --} &&\\
-\end{flalign*}
-
-In this case, computing $\mathcal{T}_3$ requires us to \textit{combine} $\mathcal{T}_1'$ and the newly computed $\mathcal{T}_2$.
+This function is used when we need to change the start/reference region of the \lstinline{rtransform}, which is used for example when merging multiple \lstinline{tgeometry} objects together.
 
 \subsection{Difference}
 \label{section:diff}
 
-The \textit{diff} function is similar to the compute function, except that it does the difference between the first and the second input argument, instead of doing an addition.
+The \lstinline{diff} function is similar to the compute function, except that it does the difference between the first and the second input argument, instead of doing an addition.
 
 \begin{align*}
         & v^x = v_2^x - v_1^x \\
@@ -395,6 +377,6 @@ The \textit{diff} function is similar to the compute function, except that it do
         \end{cases}
 \end{align*}
 
-When we want to know what the transformation is between two instants, when both instants are saved as rtransforms relative to a third instant, we can use simply do the difference between the rtransform of the final instant and the rtransform of the initial instant to get the result.
+When we want to know what the transformation is between two instants, when both instants are saved as \lstinline{rtransforms} relative to a third instant, we can use simply do the difference between the \lstinline{rtransform} of the final instant and that of the initial instant to get the result.
 
-For example, if we have a tgeometryi with 3 instants $'\{\mathcal{R}_0@t_0,\ \mathcal{T}_1@t_1,\ \mathcal{T}_2@t_2\}'$, and we want to get the transformation to go from the second instant to the third, we can apply $\textit{diff}(\mathcal{T}_2,\ \mathcal{T}_1)$.
+For example, if we have a \lstinline{tgeometryi} with 3 instants $'\{\mathcal{R}_0@t_0,\ \mathcal{T}_1@t_1,\ \mathcal{T}_2@t_2\}'$, and we want to get the transformation to go from the second instant to the third, we can apply \lstinline{diff}$(\mathcal{T}_2,\ \mathcal{T}_1)$.

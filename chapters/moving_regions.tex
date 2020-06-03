@@ -39,7 +39,7 @@ This slices representation of a moving regions makes use of \textit{moving segme
 
 To describe the complete movement of a moving region or apply operations on these regions, many of these slices are needed, and this causes storage and efficiency issues. To solve this problem, a polyhedra-based model is described in \cite{polyhedra}, which uses the same moving segments as previously, but computes the operations more efficiently by using the temporal dimension as a third dimension, and using 3D geometry to compute the operations. As a result, less slices are created than in the previous implementations.
 
-\section{Fixed-shape Moving Regions}
+\section{Fixed-Shape Moving Regions}
 \label{section:fixed_shape_regions}
 
 Fixed-shape moving regions form another subset of all moving regions, and can be used to represent any moving rigid body, such a cars, boats, planes, etc. When the spatial extent of the object is negligible, and the orientation of no importance, the movement of such a body is usually represented by a moving point. When these conditions are not met, however, the movement of the region as a whole has to be analyzed.
@@ -58,7 +58,7 @@ When we manage continuous moving regions, we again have to find a way to compute
 \end{figure}
 
 
-The reason for this is that the interpolation method does not use the assumptions made on the possible transformations of the polygon. To solve this, a new model is proposed in \cite{fmregion}, which stores the region as a sequence of transformations, and makes use of these transformations to compute the correct interpolation. The resulting fixed-shape moving region is called \textit{fmregion} in this paper, and an example of a desired interpolation for this type of region is seen in Figure \ref{fig:fixed_shape_interpolation}.
+The reason for this is that the interpolation method does not use the assumptions made on the possible transformations of the polygon. To solve this, a new model is proposed in \cite{fmregion}, which stores the region as a sequence of transformations, and makes use of these transformations to compute the correct interpolation. The resulting fixed-shape moving region is called \lstinline{fmregion} in this paper, and an example of a desired interpolation for this type of region is seen in Figure \ref{fig:fixed_shape_interpolation}.
 
 \begin{figure}[h!]
     \centering
@@ -71,20 +71,20 @@ The reason for this is that the interpolation method does not use the assumption
 The model makes use of a \textit{transformationunit}, which specifies a rotation center $C$, an initial translation vector $v_0$ and rotation angle $\theta_0$, the vector $v$ and angle $\theta$ representing the transformation, as well as a time interval $[t_s; t_e]$, specifying the start and end instant of the transformation.
 
 \[
-    \text{transformationunit } \mathcal{T}: (C, v_0, v, \theta_0, \theta, t_{s}, t_{e})
+    \textit{transformationunit } \mathcal{T}: (C, v_0, v, \theta_0, \theta, t_{s}, t_{e})
 \]
 
 An fmregion is thus defined by a single classical region $\mathcal{R}$ and a set of at least one transformation unit $\mathcal{T}$.
 
 \[
-    \text{fmregion } : (\mathcal{R}, \mathcal{T}^{+})
+    \textit{fmregion} : (\mathcal{R}, \mathcal{T}^{+})
 \]
 
 When computing the position of the region at a moment between the start and end instant of a transformation unit, the translation vector, and rotation angle are linearly interpolated, and then the transformation is applied to the initial region to retrieve the position of the region at the correct moment.
 
 Note that the previous definition allows the region to rotate around an arbitrary rotation center for each transformation unit. This particularity allows the moving region to change rotation center between two transformation units, which is useful to describe a larger amount of trajectories than if the rotation center was fixed for all transformations. On the other hand, this also requires the user to input the rotation center for each transformation, since this cannot be uniquely computed by just seeing the start and end position of the region.
 
-The same paper \cite{fmregion} also describes a few useful algorithms to process moving regions, such as a \textit{traversed area} function, which computes the union of all places that the region went through during its movement.
+The same paper \cite{fmregion} also describes a few useful algorithms to process moving regions, such as a traversed area function, which computes the union of all places that the region went through during its movement.
 
 \section{3D Moving Regions}
 \label{section:3d_regions_intro}
@@ -101,7 +101,7 @@ First of all, it is important to define what we call a 3D region. There is indee
 \end{figure}
 
 
-Support for 3D geometries is currently extremely restricted in database management systems \cite{3d_geom}. However, PostGIS does support two types of 3D geometries: \textit{Polyhedral Surfaces} and \textit{Triangulated Irregular Network Surfaces} [TIN], which are basically polyhedral surfaces where every polygon is a triangle. A few 3D functions are also implemented, such as \textit{ST\_3DClosestPoint} or \textit{ST\_3DDistance}.
+Support for 3D geometries is currently extremely restricted in database management systems \cite{3d_geom}. However, PostGIS does support two types of 3D geometries: \textit{Polyhedral Surfaces} and \textit{Triangulated Irregular Network Surfaces} [TIN], which are basically polyhedral surfaces where every polygon is a triangle. A few 3D functions are also implemented, such as \lstinline{ST_3DClosestPoint} or \lstinline{ST_3DDistance}.
 
 First, let's look at the case where the regions move in discrete time steps. In this case, like previously, the problem of interpolating between two instants does not arise, and the difficulty is reduced to storing the large amount of data that might be present in an efficient manner. 
 
@@ -109,4 +109,4 @@ If we assume fixed-shape regions, we can again use the fact that the only possib
 
 Looking at continuously moving regions, we can apply the same storage idea, and retrieving the position of the region between two stored instants by computing a linear interpolation of the translation, just as was done in 3D, and computing a more advanced interpolation for the 3D rotation, based on \textit{quaternions}.
 
-This interpolation method will be discussed in a later section (\ref{section:3d_regions}), but the important part is that it can be done. Storing 3D moving regions of fixed-shape is thus possible, and retrieving the region at any arbitrary instant is too. Implementation of functions that can manipulate and analyze these regions is another issue, and is left as future research.
+This interpolation method will be discussed in a later section (Section \ref{section:3d_regions}), but the important part is that it can be done. Storing 3D moving regions of fixed-shape is thus possible, and retrieving the region at any arbitrary instant is too. Implementation of functions that can manipulate and analyze these regions is another issue, and is left as future research.
