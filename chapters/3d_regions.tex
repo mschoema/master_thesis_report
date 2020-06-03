@@ -3,11 +3,11 @@
 \section{3D Regions}
 \label{section:3d_regions}
 
-When we consider moving regions of fixed shape in three dimensions, some of the ideas and concepts used for 2D regions can be reused. For example, when we want to represent a moving region in a compact way, the technique of using the transformation between the instants can be reused. A 3D transformation is, just as in 2D, the combination of a translation and a rotation, but the translation now has three degrees of freedom instead of two, and the rotation also has three degrees of freedom instead of one.
+When we consider moving regions of fixed shape in three dimensions, some of the ideas and concepts used for 2D regions can be reused. For example, when we want to represent a moving region compactly, the technique of using the transformation between the instants can be reused. A 3D transformation is, just as in 2D, the combination of a translation and a rotation, but the translation now has three degrees of freedom instead of two, and the rotation also has three degrees of freedom instead of one.
 
-The most important operation when implementing moving regions is the interpolation, since this allows us to retrieve the value of the region at any given instant. Interpolation in 3D requires us to interpolate the translation vector linearly in 3D, which is relatively easy, and it requires us to interpolate the rotation vector 'linearly'.  This interpolation of 3D rotations is quite a bit more complicated than in 2D, and is done using \textit{quaternions}. Quaternions and their use in computing the interpolation of 3D rotations is described in Section \ref{section:quaternion_interpolation}.
+The most important operation when implementing moving regions is the interpolation since this allows us to retrieve the value of the region at any given instant. Interpolation in 3D requires us to interpolate the translation vector linearly in 3D, which is relatively easy, and it requires us to interpolate the rotation vector 'linearly'.  This interpolation of 3D rotations is quite a bit more complicated than in 2D and is done using \textit{quaternions}. Quaternions and their use in computing the interpolation of 3D rotations are described in Section \ref{section:quaternion_interpolation}.
 
-The representation and interpolation are the only aspect of 3D moving regions that have been researched for this master thesis, and the implementation of other functions is left as future work.
+Representation and interpolation are the only aspects of 3D moving regions that have been researched for this master thesis, and the implementation of other functions is left as future work.
 
 \subsection{Quaternions for the Interpolation of Rotations}
 \label{section:quaternion_interpolation}
@@ -24,13 +24,13 @@ Quaternions were first described by William Rowan Hamilton in 1843 and are an ex
     q = a + bi + cj + dk, \; \text{with } a, b, c, d \in \mathbb{R} \\
 \end{equation}
 
-The symbols \( i, j \) and \( k \) can be interpreted as unit vectors in a three dimensional space, and are analogous to the symbol i in complex numbers. Multiplication of complex numbers uses the fact that \( i^2 = -1 \). In a similar way, quaternion multiplication is defined using the multiplication rules of \( i, j \) and \( k \) with each other.
+The symbols \( i, j \) and \( k \) can be interpreted as unit vectors in a three-dimensional space, and are analogous to the symbol i in complex numbers. Multiplication of complex numbers uses the fact that \( i^2 = -1 \). Similarly, quaternion multiplication is defined using the multiplication rules of \( i, j \) and \( k \) with each other.
 
 \begin{equation}
     i^2 = j^2 = k^2 = ijk = -1 \\
 \end{equation}
 
-The equations above define the complete behavior of the three symbols, and the equations below can be found using them.
+The equations above define the complete behaviour of the three symbols, and the equations below can be found using them.
 
 \begin{align*}
     ij &= k & ji &= -k \\
@@ -67,9 +67,9 @@ where \( q^{-1} \) is the reciprocal of \( q \), which for unit quaternions is t
 \end{split}
 \end{equation}
 
-When rotating a point or polygon around an axis that does not go through the origin, we first have to translate the point/polygon to make the rotation axis go through the origin. For example if the axis goes through the centroid of a polygon, we first have to translate this polygon so that its centroid and the origin are coincident. Then, we apply the rotation to each vertex of the polygon. Finally, the polygon is translated back to return its centroid at the initial position.
+When rotating a point or polygon around an axis that does not go through the origin, we first have to translate the point/polygon to make the rotation axis go through the origin. For example, if the axis goes through the centroid of a polygon, we first have to translate this polygon so that its centroid and the origin are coincident. Then, we apply the rotation to each vertex of the polygon. Finally, the polygon is translated back to return its centroid at the initial position.
 
-Multiple rotations can be combined together into a single one by combining the corresponding quaternions. For example, the combined rotation of first applying \( q_1 \) and then \( q_2 \) can be computed as 
+Multiple rotations can be combined into a single one by combining the corresponding quaternions. For example, the combined rotation of first applying \( q_1 \) and then \( q_2 \) can be computed as 
 
 \begin{equation}
 \begin{split}
@@ -86,7 +86,7 @@ The efficiency of using quaternions instead of rotation matrices or axis-angle r
 
 \subsubsection{Interpolating 2D and 3D Rotations Using Quaternions}
 
-Now that rotation quaternions have been presented as a method used to represent 3D rotations, let's look at how we can compute an interpolation between two rotations. An example of the interpolation of two 3D rotations can be seen in Figure \ref{fig:3d_interpolation}. The computations can be done relatively easily using quaternions, and corresponds to a spherical linear interpolation (\lstinline{slerp}) in 3D.
+Now that rotation quaternions have been presented as a method used to represent 3D rotations, let's look at how we can compute an interpolation between two rotations. An example of the interpolation of two 3D rotations can be seen in Figure \ref{fig:3d_interpolation}. The computation can be done relatively easily using quaternions and corresponds to a spherical linear interpolation (\lstinline{slerp}) in 3D.
 
 \begin{figure}[h!]
 \centering
@@ -104,7 +104,7 @@ Now that rotation quaternions have been presented as a method used to represent 
 \label{fig:3d_interpolation}
 \end{figure}
 
-The interpolation process can be represented mathematically as follows. To interpolate between two rotations represented by quaternions \( q_0 \) and \( q_1 \), we first compute an angle \( \theta \) between them, and then apply the \lstinline{slerp} process to find the interpolated rotation. $r$ is a ratio value which depends on the instant of the resulting rotation, just as in Section \ref{section:interpolate}.
+The interpolation process can be represented mathematically as follows. To interpolate between two rotations represented by quaternions \( q_0 \) and \( q_1 \), we first compute an angle \( \theta \) between them and then apply the \lstinline{slerp} process to find the interpolated rotation. $r$ is a ratio value which depends on the instant of the resulting rotation, just as in Section \ref{section:interpolate}.
 
 \begin{equation}
 \begin{split}
@@ -116,9 +116,9 @@ The interpolation process can be represented mathematically as follows. To inter
     
 \subsubsection{Interpolating 2D Rotations Using Complex Numbers}
 
-We have shown how quaternions can be used to represent 3D rotations and to compute interpolation between 3D rotations. These techniques can thus also be used for 2D rotations, since they are a special type of 3D rotations and the interpolation between two 2D rotations also results in a 2D rotation. Nevertheless, using a quaternion rotation for 2D rotations might be overkill if 3D rotations do not need to be handled. A method has previously been described that handles only 2D rotations, but as said previously, it has to handle edge cases, because of the fact that rotation angles have to be between \( - \pi \) and \( \pi \). Another method uses complex numbers to, similarly to the previously mentioned quaternions, compute interpolation of 2D rotations in an efficient way. This is done using the exact same technique as with quaternions, but using less parameters. The equations are shown below, and the similarity with the previously defined equations for quaternions can clearly be seen.
+We have shown how quaternions can be used to represent 3D rotations and to compute interpolation between 3D rotations. These techniques can thus also be used for 2D rotations since they are a special type of 3D rotations and the interpolation between two 2D rotations also results in a 2D rotation. Nevertheless, using a quaternion rotation for 2D rotations might be overkill if 3D rotations do not need to be handled. A method has previously been described that handles only 2D rotations but as said previously, it has to handle edge cases because rotation angles have to be between \( - \pi \) and \( \pi \). Another method uses complex numbers to, similarly to the previously mentioned quaternions, efficiently compute interpolation of 2D rotations. This is done using the same technique as with quaternions, but using fewer parameters. The equations are shown below, and the similarity with the previously defined equations for quaternions can be seen clearly.
 
-A rotation of $\theta$ around the origin can be represented using the complex number \( q = \cos(\frac{\theta}{2}) + i*\sin(\frac{\theta}{2}) \) and a 2D point \( p = (x, y) \) can be represented using the complex number \( p = x + i*y \). Computing the interpolation between two rotations \( q_0 \) and \( q_1 \) can be done in a similar manner as quaternion interpolation
+A rotation of $\theta$ around the origin can be represented using the complex number \( q = \cos(\frac{\theta}{2}) + i*\sin(\frac{\theta}{2}) \) and a 2D point \( p = (x, y) \) can be represented using the complex number \( p = x + i*y \). Computing the interpolation between two rotations \( q_0 \) and \( q_1 \) can be done similarly as quaternion interpolation
 
 \begin{equation}
 \begin{split}

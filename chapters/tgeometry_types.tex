@@ -19,7 +19,7 @@ Now that the choice of the type of region is done, the next challenge is finding
 \subsection{Type \texttt{tgeometryinst}}
 \label{section:internal_repr_inst}
 
-A moving region of instant duration is basically a static region, with an associated timestamp. As said in Section \ref{section:postgis}, the PostGIS type \lstinline{Geometry(Polygon)} will be used to describe a static region. A \lstinline{tgeometryinst} can thus be represented similarly to any other temporal type of instant duration, that is: as a pair of value and timestamp
+A moving region of instant duration is a static region, with an associated timestamp. As said in Section \ref{section:postgis}, the PostGIS type \lstinline{Geometry(Polygon)} will be used to describe a static region. A \lstinline{tgeometryinst} can thus be represented similarly to any other temporal type of instant duration, that is: as a pair of value and timestamp
 
 \[
     'v@t', 
@@ -33,7 +33,7 @@ As described in Section \ref{section:mobilitydb_i}, a temporal value of instant 
 
 A simple and naive representation for a \lstinline{tgeometryi} is then to store all instants in the set using the previous representation. That is, store for each instant a pair of polygon and timestamp. However, since we have added the extra requirement on the polygons, namely that their shape has to be the same, we are introducing a lot of redundancy in this representation, and the storage is thus not very efficient. \\
 
-Suppose that all the previously mentioned requirements are met, we can store the \lstinline{tgeometryi} in a more efficient way, by storing the polygon only once, and storing the subsequent instants using only the transformation with respect to the initial instant. 
+Suppose that all the previously mentioned requirements are met, we can store the \lstinline{tgeometryi}  more efficiently, by storing the polygon only once and storing the subsequent instants using only the transformation with respect to the initial instant. 
 
 Using this representation, a \lstinline{tgeometryi} with $n$ instants is written as
 
@@ -42,27 +42,27 @@ Using this representation, a \lstinline{tgeometryi} with $n$ instants is written
 \]
 where $\mathcal{R}_0$ is the initial region, and $\mathcal{T}_i$ are the transformation units. \\
 
-Section \ref{section:fixed_shape_regions} describes a possible transformation unit representing a transformation from a start to an end instant. In our case, only the end instant has to be stored, since the start instant will always be represented by the reference region $\mathcal{R}_0$ at time $t_{0}$. Since the start and end timestamp are also already stored elsewhere, namely in the timestamps $t_0$ and $t_i$, we only need to store the rotation center $C$, the translation vector $(v^x,\ v^y)$ and the rotation angle $\theta$ in the transformation unit.
+Section \ref{section:fixed_shape_regions} describes a possible transformation unit representing a transformation from a start to an end instant. In our case, only the end instant has to be stored, since the start instant will always be represented by the reference region $\mathcal{R}_0$ at time $t_{0}$. Since the start and end timestamp are also already stored elsewhere, namely in the timestamps $t_0$ and $t_i$, we only need to store the rotation centre $C$, the translation vector $(v^x,\ v^y)$ and the rotation angle $\theta$ in the transformation unit.
 
 \[
     \mathcal{T}_i: (C_i, v_i^x, v_i^y, \theta_i)
 \]
 
-If we want to compute the transformation unit starting from the initial and final polygons, we need to also define a rotation center for all the other parameters to be uniquely defined. For example, if we look at the start and end polygon (dark blue) shown in Figure \ref{fig:center_of_rotation}, multiple transformation units can be defined, all having the same initial and final position, but they differ in their rotation center and the path they take. The blue path has a fixed rotation center at $(3.5,\ 1)$, and there is no translation involved, while the red path uses the centroid of the polygon as rotation center, and involves a translation by 5 units along the x-axis.
+If we want to compute the transformation unit starting from the initial and final polygons, we need to also define a rotation centre for all the other parameters to be uniquely defined. For example, if we look at the start and end polygon (dark blue) shown in Figure \ref{fig:center_of_rotation}, multiple transformation units can be defined, all having the same initial and final position, but they differ in their rotation centre and the path they take. The blue path has a fixed rotation centre at $(3.5,\ 1)$, and there is no translation involved, while the red path uses the centroid of the polygon as the rotation centre, and involves a translation by 5 units along the x-axis.
 
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.75\textwidth]{images/center_of_rotation_importance.png}
-    \caption{Importance of the center of rotation for a transformation.}
+    \caption{Importance of the centre of rotation for a transformation.}
     \label{fig:center_of_rotation}
 \end{figure}
 
 
 We also know that a temporal instant set is defined only at its instants, and not in between. This means that we only care about the start and end position of a region, but we do not care about the path taken during the transformation. 
 
-Since the decision of the rotation center only changes the path taken by the region during the transformation, the previous observation tells us that we can choose the rotation center arbitrarily when computing the transformation unit. \\
+Since the decision of the rotation centre only changes the path taken by the region during the transformation, the previous observation tells us that we can choose the rotation centre arbitrarily when computing the transformation unit. \\
 
-The rotation center takes a certain amount of storage space, and since we just realized that we can chose it arbitrarily, we will define the rotation center of all transformation units as being the centroid of the region at instant $t_0$. With the rotation center fixed, we can save storage space by only storing the translation vector and the rotation angle for each transformation. 
+The rotation centre takes a certain amount of storage space, and since we just realized that we can choose it arbitrarily, we will define the rotation centre of all transformation units as being the centroid of the region at instant $t_0$. With the rotation centre fixed, we can save storage space by only storing the translation vector and the rotation angle for each transformation. 
 
 \[
     \mathcal{T}_i: (v_i^x, v_i^y, \theta_i)
@@ -70,25 +70,25 @@ The rotation center takes a certain amount of storage space, and since we just r
 
 Using this representation, we can store a \lstinline{tgeometryi} using minimal storage space. The two remaining challenges are: how do we compute a transformation unit starting from an initial and final polygon value, and how do we recompute the position of the region, starting from an initial polygon, and a transformation unit? The solution to these two problems is described in Sections \ref{section:compute} and \ref{section:apply}. \\
 
-As a side note, the current implementation recomputes the centroid of the polygon (center of rotation) using the PostGIS function \lstinline{ST_Centroid} every time it is needed, but if we later realize that this computation is done often and is not very efficient, we can also compute it once during the input of the moving region, and then store it with the region in the first instant.
+As a side note, the current implementation recomputes the centroid of the polygon (centre of rotation) using the PostGIS function \lstinline{ST_Centroid} every time it is needed, but if we later realize that this computation is done often and is not very efficient, we can also compute it once during the input of the moving region, and then store it with the region in the first instant.
 
 \subsection{Type \texttt{tgeometryseq}}
 \label{section:internal_repr_seq}
 
 A temporal region of sequence duration represents the continuous movement of a region, where the position of the moving region can be retrieved at every instant between the initial and final instant. Here, we thus not only care about the position of the region at the input instants, but we also need to be able to interpolate the region between two defined instants.
 
-As we realized previously, when computing a transformation unit starting from the initial and final position of the polygon, the choice of the rotation center defines the path taken during the movement uniquely. This means that the rotation center will have an impact on the interpolation. \\
+As we realized previously, when computing a transformation unit starting from the initial and final position of the polygon, the choice of the rotation centre defines the path taken during the movement uniquely. This means that the rotation centre will have an impact on the interpolation. \\
 
-One important assumption that was implicitly made for the \lstinline{tgeometryi} type, is the fact that a \lstinline{tgeometryseq} is input as a list of \lstinline+tgeometryinst+. We are thus not getting any extra information other than the snapshots of the regions at specific instants, and, in particular, we do not know what the rotation center is for every transformation. This means that we need to define a rotation center ourselves for the transformations to be well-defined.
+One important assumption that was implicitly made for the \lstinline{tgeometryi} type, is the fact that a \lstinline{tgeometryseq} is input as a list of \lstinline+tgeometryinst+. We are thus not getting any extra information other than the snapshots of the regions at specific instants, and, in particular, we do not know what the rotation centre is for every transformation. This means that we need to define a rotation centre ourselves for the transformations to be well-defined.
 
-Having to define a rotation center ourselves has multiple consequences. First of all, since there is no way to know what the real center of rotation was simply based on the snapshots of the region at the given instants, the only solution we have is to decide on an arbitrary center of rotation. Secondly, since the arbitrary center of rotation will most probably not be the real center of rotation, there will be errors between the real path taken by the region and the interpolated path. \\
+Having to define a rotation centre has multiple consequences. First of all, since there is no way to know what the real centre of rotation was simply based on the snapshots of the region at the given instants, the only solution we have is to decide on an arbitrary centre of rotation. Secondly, since the arbitrary centre of rotation will most probably not be the real centre of rotation, there will be errors between the real path taken by the region and the interpolated path. \\
 
-Since we know that we have to define an arbitrary center of rotation, the most obvious solution is to take the centroid of the region as the rotation center, since this point is well-defined for all regions and is easy to compute. As you might remember, this is the same solution as for \lstinline{tgeometryi}, so we can represent a \lstinline{tgeometryseq} as 
+Since we know that we have to define an arbitrary centre of rotation, the most obvious solution is to take the centroid of the region as the rotation centre, since this point is well-defined for all regions and is easy to compute. As you might remember, this is the same solution as for \lstinline{tgeometryi}, so we can represent a \lstinline{tgeometryseq} as 
 
 \[
     '[\mathcal{R}_0@t_0,\ \mathcal{T}_1@t_1,\ \mathcal{T}_2@t_2,\ ..., \ \mathcal{T}_{n-1}@t_{n-1}]', 
 \]
-with $\mathcal{T}_i$ being the transformation with respect to $\mathcal{R}_0$.
+with $\mathcal{T}_i$ being the transformation defined with respect to $\mathcal{R}_0$.
 
 \[
     \mathcal{T}_i: (v_i^x, v_i^y, \theta_i)
@@ -96,9 +96,9 @@ with $\mathcal{T}_i$ being the transformation with respect to $\mathcal{R}_0$.
 
 The algorithmic challenges for this data type are the same as for \lstinline{tgeometryi}, with the addition of one problem. This problem is stated in the following way: given a polygon defined at time $t_0$, and two transformation units defined at times $t_i$ and $t_{i+1}$, both defined with respect to the initial polygon, how do we compute the position of the region at any given time $t$, where $t_i < t < t_{i+1}$? The solution to this problem is given in Section \ref{section:interpolate}. \\
 
-One last unsolved problem is the fact that the interpolated path does not exactly follow the real path taken by the moving region, when the real rotation center of the moving region is not its centroid. Solving this issue algorithmically would require us to know the real path taken by the moving region and thus the real rotation center, which, as we explained previously, is not possible when we only get snapshots of the region at distinct instants. 
+One last unsolved problem is the fact that the interpolated path does not exactly follow the real path taken by the moving region when the real rotation centre of the moving region is not its centroid. Solving this issue algorithmically would require us to know the real path taken by the moving region and thus the real rotation centre, which, as we explained previously, is not possible when we only get snapshots of the region at distinct instants. 
 
-The only solution to this problem without changing the assumptions made, is to give as much snapshots of the region in the input as needed to minimize the difference between interpolated path and the real path. Indeed, we can achieve any arbitrary precision by increasing the amount of instants given in the input between the initial and final position of the region. An example of how giving more instants can increase the precision of the interpolation is shown in Figure \ref{fig:num_instants_importance}. \\
+The only solution to this problem without changing the assumptions made is to give as many snapshots of the region in the input as needed to minimize the difference between the interpolated path and the real path. Indeed, we can achieve any arbitrary precision by increasing the number of instants given in the input between the initial and final position of the region. An example of how giving more instants can increase the precision of the interpolation is shown in Figure \ref{fig:num_instants_importance}. \\
 
 \begin{figure}[h!]
 \centering
@@ -133,12 +133,12 @@ The only solution to this problem without changing the assumptions made, is to g
 \label{fig:num_instants_importance}
 \end{figure}
 
-Figure \ref{fig:real_path} displays the real path (in blue) taken by a moving region (in green). Given only the start and end instants (in green) (Figure \ref{fig:no_insts_path}), the computed path is quite far from the reality. This computed path improves as more intermediate instants (in green) are given. The blue paths shown in the Figure \ref{fig:num_instants_importance} are computed using the traversed area function described in Section \ref{section:traversed_area}.
+Figure \ref{fig:real_path} displays the real path (in blue) taken by a moving region (in green). Given only the start and end instants (in green) (Figure \ref{fig:no_insts_path}), the computed path is quite far from reality. This computed path improves as more intermediate instants (in green) are given. The blue paths shown in Figure \ref{fig:num_instants_importance} are computed using the traversed area function described in Section \ref{section:traversed_area}.
 
 \subsection{Type \texttt{tgeometrys}}
 \label{section:internal_repr_s}
 
-The last type that we have to handle is \lstinline{tgeometrys}, which is a temporal geometry of sequence set duration. The input to this type is a list of \lstinline{tgeometryseq}. This means that we already receive some of the instants as transformations with respect to the first instant of their sequence.
+The last type that we have to handle is \lstinline{tgeometrys}, which is a temporal geometry of sequence set duration. The input to this type is a list of \lstinline{tgeometryseq}. This means that we already receive some of the instants as transformations defined with respect to the first instant of their sequence.
 
 For this to be a valid \lstinline{tgeometrys}, we first need to check the fact that all regions have the same shape. Since this check was already made independently for each sequence when they were created, we thus only need to make sure that the polygons of the first instants of every sequence have the same shape. \\
 
@@ -149,7 +149,7 @@ Assuming that all sequences describe the movement of  polygons of the same shape
 \]
 with every transformation $\mathcal{T}_i^j$, being defined with respect to the region $\mathcal{R}_0^j$ at the start of the sequence.
 
-This solution is easy, since we do not have to do any more preprocessing, but it also has some redundancies, since we know that the first region of each sequence has the same shape. \\
+This solution is easy since we do not have to do any more preprocessing, but it also has some redundancies, since we know that the first region of each sequence has the same shape. \\
 
 The second possibility is thus to remove the redundancy by replacing the region values of the first instants of all sequences after the first by a transformation value. For all sequences after the first one, we have to compute the transformation of the first instant of the sequence $\mathcal{T}_0^j$ with respect to the first instant of the first sequence of the set $\mathcal{R}_0^0$. All other transformations of the sequence would have to be modified too, to have the start region being the first instant of the first sequence.
 
@@ -159,21 +159,21 @@ The second possibility is thus to remove the redundancy by replacing the region 
 
 In this representation, every transformation $\mathcal{T}_i^j$ is defined with respect to the region $\mathcal{R}_0^0$ at the start of the first sequence.
 
-This option requires some more preprocessing, but requires less storage space than the previous option. Another disadvantage of this method is the retrieval of a sequence in the set. This operation requires us to re-transform the whole sequence to its input representation if the required sequence is not the first one.
+This option requires some more preprocessing but requires less storage space than the previous option. Another disadvantage of this method is the retrieval of a sequence in the set. This operation requires us to re-transform the whole sequence to its input representation if the required sequence is not the first one.
 
 Depending on the use case, the average number of sequences in a set, the average number of instants in each sequence and a few more parameters, either the first option or the second option could prove to be more interesting. \\
 
-The option that has been implemented in practice is the first one, as it seems to be the easiest one, and seems require cleaner and less code than the second option. Implementing the second option and comparing their efficiency is left as future research.
+The option that has been implemented in practice is the first one, as it seems to be the easiest one, and seems to require cleaner and less code than the second option. Implementing the second option and comparing their efficiency is left as future research.
 
 \subsection{Type \texttt{rtransform}}
 
-In three of the last four types, a transformation unit was used to represent an instant of a moving region more efficiently than by using a polygon. This transformation unit is stored in the database using a new type called \lstinline{rtransform} (short for \textit{region transformation}). As explained previously, this type only need to store information about the translation vector $(v^x,\ v^y)$ and rotation angle $\theta$ of the final value of the region, since we assume that we know what the start instant is, and we also assume the center of rotation to be the centroid of the region. Internally, all parameters of the \lstinline{rtransform} type will be represented using the \lstinline{double} type.
+In three of the last four types, a transformation unit was used to represent an instant of a moving region more efficiently than by using a polygon. This transformation unit is stored in the database using a new type called \lstinline{rtransform} (short for \textit{region transformation}). As explained previously, this type only needs to store information about the translation vector $(v^x,\ v^y)$ and rotation angle $\theta$ of the final value of the region, since we assume that we know what the start instant is, and we also assume the centre of rotation to be the centroid of the region. Internally, all parameters of the \lstinline{rtransform} type will be represented using the \lstinline{double} type.
 
 \[
     \text{rtransform}\ \mathcal{T}: (\text{double}\ v_x,\ \text{double}\ v_y,\ \text{double}\ \theta)
 \]
 
-Since we know that rotating by $\theta$ or rotating by $\theta + 2\pi$ gives the same final result, we will add an additional constraint on the rotation angle stored in an \lstinline{rtransform} object: $-\pi < \theta \le \pi$. This constraint allows us to compute a unique transformation unit when starting from an initial and final polygon. \\
+Since we know that rotating by $\theta$ or rotating by $\theta + 2\pi$ gives the same final result, we will add a constraint on the rotation angle stored in an \lstinline{rtransform} object: $-\pi < \theta \le \pi$. This constraint allows us to compute a unique transformation unit when starting from an initial and final polygon. \\
 
 An \lstinline{rtransform} like this always has to be related to a polygon object, usually the polygon stored in the value of the first instant of the sequence, which will be the initial polygon. We can then apply the \lstinline{rtransform} as explained in \ref{section:apply} to the start polygon, to retrieve the final polygon. Retrieving the polygon at an instant that is in between two stored instants, will require us to interpolate between two saved transformations to retrieve the final polygon. This interpolation method is explained in Section \ref{section:interpolate}.
 

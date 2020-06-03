@@ -42,11 +42,11 @@ The \lstinline{compute} function takes two polygon values as input and computes 
 
 As said previously the type used to represent a region value is the PostGIS type \lstinline{Geometry(Polygon)}. This polygon type is defined using rings: one outer ring, and zero or more inner rings defining holes in the polygon. One assumption that we make when receiving the polygons as input is that two polygons of the same shape have their corresponding points defined at the same position in the rings of said polygons. 
 
-The rings are defined as lists of points, with the first and the last points being equal to denote that the ring is closed. Our previous assumption thus says that the $i$'th point in the list defining the outer ring of the first polygon, has to correspond to the $i$'th point in the list defining the outer ring of the second polygon, after application of the correct transformation.
+The rings are defined as lists of points, with the first and the last points being equal to denote that the ring is closed. Our previous assumption thus says that the $i$'th point in the list defining the outer ring of the first polygon has to correspond to the $i$'th point in the list defining the outer ring of the second polygon, after application of the correct transformation.
 
-Essentially this means that the points of the polygons are 'numbered' in the same way. This allows us for example to distinguish a square from its 90 degree rotations. \\
+Essentially this means that the points of the polygons are 'numbered' in the same way. This allows us, for example, to distinguish a square from its 90-degree rotations. \\
 
-The combination of a rotation by $\theta$ around the origin, followed by a translation by $(v^x,\ v^y)$, can be described using a matrix multiplication.
+The combination of rotating by $\theta$ around the origin, followed by a translation by $(v^x,\ v^y)$, can be described using matrix multiplication.
 
 \[
     \begin{bmatrix}
@@ -78,7 +78,7 @@ Using the notation
         d = v^y          \\
     \end{cases}, 
 \]
-and by taking the first two points of the outer rings of both input polygons, we have the following list of equations:
+and by taking the first two points of the outer rings of both input polygons, we arrive at the following list of equations
 
 \[
     \begin{cases}
@@ -90,7 +90,7 @@ and by taking the first two points of the outer rings of both input polygons, we
 \]
 with $(x_1, y_1)$ and $(x_2, y_2)$ being the first two points of the first polygon, and $(x_1', y_1')$ and $(x_2', y_2')$ being the corresponding points on the second polygon.
 
-We can then solve these equations for $a$, $b$, $c$ and $d$:
+We can then solve these equations for $a$, $b$, $c$ and $d$
 
 \[
     \begin{cases}
@@ -100,7 +100,7 @@ We can then solve these equations for $a$, $b$, $c$ and $d$:
         d = y_1' - a*y_1 - b*x_1 \\
     \end{cases}, 
 \]
-and finally we can get the parameters of the transformation: 
+and finally we get the parameters of the transformation.
 
 \[
     \begin{cases}
@@ -110,32 +110,32 @@ and finally we can get the parameters of the transformation:
     \end{cases}
 \]
 
-As said previously, this computes a transformation which is the combination of first a rotation $\theta$ applied around the origin, and then a translation $(v^x,\ v^y)$. To use these equations, we thus need the centroid of the first polygon (the center of rotation for this transformation) to be at the origin. To solve this issue, we first compute the centroid of the first region, then translate both regions using the same translation, to have the new centroid of the first region be at the origin. Finally we can use the above equations to compute the parameters of the transformations.
+As said previously, this computes a transformation which is the combination of first a rotation $\theta$ applied around the origin, and then a translation $(v^x,\ v^y)$. To use these equations, we thus need the centroid of the first polygon (the centre of rotation for this transformation) to be at the origin. To solve this issue, we first compute the centroid of the first region, then translate both regions using the same translation, to have the new centroid of the first region being at the origin. Finally, we can use the above equations to compute the parameters of the transformations.
 
 When we also need to verify that both input polygons have the same shape, we can apply this computed transformation to the start polygon, and compare all corresponding points with the end polygon after the transformation. If the distance between the position of two corresponding points differs by more than a given $\epsilon$, we can assume that the two regions do not have the same shape.
 
 \subsection{Apply}
 \label{section:apply}
 
-This \lstinline{apply} function does the opposite of the \lstinline{compute} function. Given an \lstinline{rtransform}, and a start polygon, it applies the transformation to retrieve the end polygon. This is done using a PostGIS function called \lstinline{ST_Affine}, which applies an affine transformation to the given geometry. 
+This \lstinline{apply} function does the opposite of the \lstinline{compute} function. Given an \lstinline{rtransform} and a start polygon, it applies the transformation to retrieve the end polygon. This is done using a PostGIS function called \lstinline{ST_Affine}, which applies an affine transformation to the given geometry. 
 
-Applying an affine transformation again means rotating around the origin, so we first have to translate the polygon to have its centroid at the origin, then we can apply the given transformation, and finally we apply the inverse of the first translation to get the final polygon.
+Applying an affine transformation again means rotating around the origin, so we first have to translate the polygon to have its centroid at the origin, then we can apply the given transformation, and finally, we apply the inverse of the first translation to get the final polygon.
 
 \subsection{Interpolate}
 \label{section:interpolate}
 
-This function is used when we have a polygon defined at time $t_1$ and another one defined at time $t_2$, and we want to retrieve the position of the polygon at time $t$, where $t_1 < t < t_2$ using linear interpolation. Of course, when using stepwise interpolation this function is not needed, since, if we are looking for the polygon at time $t$, where $t_1 < t < t_2$, the needed polygon is simply the one defined at time $t_1$.
+This function is used when we have a polygon defined at time $t_1$ and another one defined at time $t_2$, and we want to retrieve the position of the polygon at time $t$, where $t_1 < t < t_2$ using linear interpolation. Of course, when using stepwise interpolation this function is not needed, since if we are looking for the polygon at time $t$, where $t_1 < t < t_2$, the needed polygon is simply the one defined at time $t_1$.
 
 If we wanted to interpolate two polygons using linear interpolation between their vertices, we would not keep the fixed-shape aspect of the polygon, as is in Figure \ref{fig:vertices_interpolation}. For this reason, the interpolation is done on the \lstinline{rtransforms} defining the position of the polygon at times $t_1$ and $t_2$ with respect to a certain reference polygon.
 
-For example, using a \lstinline{tgeometryseq} with three instants defined at times $t_0$, $t_1$ and $t_2$: 
+For example, using a \lstinline{tgeometryseq} with three instants defined at times $t_0$, $t_1$ and $t_2$
 
 \[
     '[\mathcal{R}_0@t_0,\ \mathcal{T}_1@t_1,\ \mathcal{T}_2@t_2]', 
 \]
-suppose that we want to compute the position of the region at time $t_1 < t < t_2$. To do this, we first apply the \lstinline{interpolate} function with $\mathcal{T}_1$ and $\mathcal{T}_2$ a arguments, and then apply the resulting \lstinline{rtransform} to $\mathcal{R}_0$ to get the result.
+suppose that we want to compute the position of the region at time $t_1 < t < t_2$. To do this, we first apply the \lstinline{interpolate} function with $\mathcal{T}_1$ and $\mathcal{T}_2$ as arguments and then apply the resulting \lstinline{rtransform} to $\mathcal{R}_0$ to get the result.
 
-The \lstinline{interpolate} functions takes three input arguments. The first two arguments are the initial and final \lstinline{rtransform} values. The third argument is a ratio value defined by the timestamp of the resulting \lstinline+rtransform+. This ratio is always between 0 and 1, and is computed as follows.
+The \lstinline{interpolate} function takes three input arguments. The first two arguments are the initial and final \lstinline{rtransform} values. The third argument is a ratio value defined by the timestamp of the resulting \lstinline+rtransform+. This ratio is always between 0 and 1 and is computed as follows.
 
 \[
     ratio = \frac{t - t_1}{t_2 - t_1}
@@ -150,7 +150,7 @@ Since we assume linear interpolation between the \lstinline{rtransform} values, 
     \end{cases}
 \]
 
-The interpolation of the angle of rotation on the other hand is slightly more complicated. We are still interpolating linearly, but we have to take into account that the angles $-\pi$ and $\pi$ correspond to the same rotation. This means that there are always two possibilities for the interpolation. Either go directly from $\theta_1$ to $\theta_2$ or go from $\theta_1$ to $-\pi$ (if $\theta_1 < \theta_2$) and then from $\pi$ to $\theta_2$. Both are valid interpolations, but one is shorter than the other. The shorter option is the option that will be taken for the interpolation of the angles.
+The interpolation of the angle of rotation, on the other hand, is slightly more complicated. We are still interpolating linearly, but we have to take into account that the angles $-\pi$ and $\pi$ correspond to the same rotation. This means that there are always two possibilities for the interpolation. Either go directly from $\theta_1$ to $\theta_2$ or go from $\theta_1$ to $-\pi$ (if $\theta_1 < \theta_2$) and then from $\pi$ to $\theta_2$. Both are valid interpolations, but one is shorter than the other. The shorter option is the option that will be taken for the interpolation of the angles.
 
 \begin{figure}[h!]
 \centering
@@ -341,12 +341,12 @@ As a last remark, if the difference between the start and end angle is exactly $
 \subsection{Interpolate Long}
 \label{section:interpolate_long}
 
-The \lstinline{interpolate_long} function does the same as the \lstinline{interpolate} function, except that during the interpolation of the angles, it always takes the longest arc instead of the smallest. This function will be useful in Section \ref{section:normalization}, when normalizing a \lstinline{tgeometryseq}.
+The \lstinline{interpolate_long} function does the same as the \lstinline{interpolate} function, except that during the interpolation of the angles, it always takes the longest arc instead of the smallest. This function will be useful in Section \ref{section:normalization} when normalizing a \lstinline{tgeometryseq}.
 
 \subsection{Combine}
 \label{section:combine}
 
-The \lstinline{combine} function essentially does an addition of two \lstinline{rtransform} value. With the input \lstinline{rtransform} objects being written as $(v_1^x,\ v_1^y,\ \theta_1)$ and $(v_2^x,\ v_2^y,\ \theta_2)$, the resulting \lstinline{rtransform} is computed as:
+The \lstinline{combine} function essentially does the addition of two \lstinline{rtransform} value. With the input \lstinline{rtransform} objects being written as $(v_1^x,\ v_1^y,\ \theta_1)$ and $(v_2^x,\ v_2^y,\ \theta_2)$, the resulting \lstinline{rtransform} is computed using the following equations.
 
 \begin{align*}
         & v^x = v_1^x + v_2^x \\
@@ -359,7 +359,7 @@ The \lstinline{combine} function essentially does an addition of two \lstinline{
         \end{cases}
 \end{align*}
 
-This function is used when we need to change the start/reference region of the \lstinline{rtransform}, which is used for example when merging multiple \lstinline{tgeometry} objects together.
+This function is used when we need to change the start/reference region of the \lstinline{rtransform}, which is used for example when merging multiple \lstinline{tgeometry} objects.
 
 \subsection{Difference}
 \label{section:diff}
