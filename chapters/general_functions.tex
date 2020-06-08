@@ -37,7 +37,7 @@ As explained previously, two new types have been added to MobilityDB: \lstinline
     \label{table:rtransform_type_declaration}
 \end{table}
 
-The \lstinline+rtransform+ type stores three double (8-byte) values, two for the translation and one for the rotation, and has thus a fixed length of 24 bytes. Since values of this type will never be store alone, but always as part of a \lstinline+tgeometry+ value, the storage strategy does not need to be declared. During the input from a string, we make sure that the value for the rotation is between $-\pi$ and $\pi$. The output as a string is formatted as
+The \lstinline+rtransform+ type stores three double (8-byte) values, two for the translation and one for the rotation, and has thus a fixed length of 24 bytes. Since values of this type will never be stored alone, but always as part of a \lstinline+tgeometry+ value, the storage strategy does not need to be declared. During the input from a string, we make sure that the value for the rotation is between $-\pi$ and $\pi$. The output as a string is formatted as
 
 \[
     \text{"RTransform(}\theta,\ v_x,\ v_y{)"}, 
@@ -130,7 +130,7 @@ This comparison between regions is done in two steps. A first quick check compar
 
 If all polygons are indeed fixed-shape, the input array is accepted and saved using the representation described in Sections \ref{section:internal_repr_i} and \ref{section:internal_repr_seq}.
 
-The sequence constructor has three additional parameters. The first two specify if the start and end instant are inclusive or not and by default both are considered inclusive. The last parameter specifies the interpolation strategy for the sequence, either linear or stepwise. The sequence set constructor has checks similar to the two previous ones, but since the input durations are already assumed to be sequences, only the comparisons between distinct sequences have to be done. During these comparisons, checks are done to assure continuously increasing timestamps, and fixed-shape polygons across the whole sequence set.
+The sequence constructor has three additional parameters. The first two specify if the start and end instants are inclusive or not and by default both are considered inclusive. The last parameter specifies the interpolation strategy for the sequence, either linear or stepwise. The sequence set constructor has checks similar to the two previous ones, but since the input durations are already assumed to be sequences, only the comparisons between distinct sequences have to be done. During these comparisons, checks are done to ensure continuously increasing timestamps, and fixed-shape polygons across the whole sequence set.
 
 Every \lstinline+tgeometry+ instance of either instant set, sequence or sequence set duration also computes and saves a bounding box used for optimization purposes. Section \ref{section:bbox_funcs} lists a few bounding-box specific functions, and Section \ref{section:bbox} explains how these bounding boxes can be computed. Temporal points of sequence and sequence set duration also save a \textit{trajectory}, which is also used to optimize a few functions. The polygon equivalent of this trajectory is the \textit{traverser area} of the polygon. The computation of the traversed area of a moving region is discussed in Section \ref{section:traversed_area}.
 
@@ -139,7 +139,7 @@ Lastly, the arrays of instants and sequences stored are normalized during the in
 \subsection{Transformation Functions}
 \label{section:transformation_funcs}
 
-Table \ref{table:transformation_funcs} lists the transformations functions that can be applied to \lstinline+tgeometry+ objects. The first four transformation functions are used to change the duration of a temporal geometry. These transformations are only possible when the correct number of instants and/or sequences are present in the input \lstinline+tgeometry+. For example, for a temporal geometry to be transformed into a \lstinline+tgeometryinst+, it must contain a single instant. Transforming into an instant set from a sequence set is only possible if every sequence in the set contains a single instant. The six possible transformations are listed below.
+Table \ref{table:transformation_funcs} lists the transformation functions that can be applied to \lstinline+tgeometry+ objects. The first four transformation functions are used to change the duration of a temporal geometry. These transformations are only possible when the correct number of instants and/or sequences are present in the input \lstinline+tgeometry+. For example, for a temporal geometry to be transformed into a \lstinline+tgeometryinst+, it must contain a single instant. Transforming into an instant set from a sequence set is only possible if every sequence in the set contains a single instant. The six possible transformations are listed below.
 
 \begin{itemize}
     \item \lstinline+Instant+ $'\mathcal{R}@t'$ $\leftrightarrow$ \lstinline+Instant Set+ $'\{\mathcal{R}@t\}'$
@@ -228,7 +228,7 @@ A large list of accessor functions exists to retrieve the duration, memory size,
 
 Other accessor functions are defined to retrieve individual values, timestamps or sequences from the temporal geometry. In Table \ref{table:accessor_funcs}, all functions containing the symbol '*' are part of a set of functions returning a certain type of element. These functions return the number of that element in the \lstinline+tgeometry+, the first, last or Nth element, and an array containing all elements respectively. This set is defined for the \lstinline{Timestamp}, \lstinline{Instant} and \lstinline{Sequence} elements. A complete list of these functions can be found in Appendix \ref{appendix:complete_funct_tables}.
 
-\subsection{Always/Ever Comparison}
+\subsection{Always/Ever Comparison Functions and Operators}
 \label{section:always_ever}
 
 These functions and operators compare a temporal geometry with a fixed region value (Polygon) and return the result of the ever equals (\lstinline+ever_eq+), always equals (\lstinline+always_eq+), ever not equals (\lstinline+ever_ne+) or always not equals (\lstinline+always_ne+) comparisons. \\
@@ -280,7 +280,7 @@ These functions are used to restrict a temporal geometry to a given value (restr
     \label{table:restriction_funcs}
 \end{table}
 
-For example, if we want to remove the data in a temporal geometry between to given timestamps, we can use the \lstinline{minusPeriod} function with as second argument a period starting at the first and ending at the second timestamp.
+For example, if we want to remove the data in a temporal geometry between two given timestamps, we can use the \lstinline{minusPeriod} function with as second argument a period starting at the first and ending at the second timestamp.
 
 \begin{table}[h!]
     \centering
@@ -308,7 +308,7 @@ For example, if we want to remove the data in a temporal geometry between to giv
 \subsection{Comparison Operators}
 \label{section:comparison_funcs}
 
-A set of comparison operators is defined in PostgreSQL, and they have been extended to accept arguments of type temporal geometry. In practice, only the equals (\lstinline+=+) and not equals (\lstinline+<>+) operators are useful for real-world applications, but the other operators are used internally to create B-tree indexes on the \lstinline+tgeometry+ type.
+A set of comparison operators is defined in PostgreSQL, and they have been extended to accept arguments of type \lstinline+tgeometry+. In practice, only the equals (\lstinline+=+) and not equals (\lstinline+<>+) operators are useful for real-world applications, but the other operators are used internally to create B-tree indexes on the \lstinline+tgeometry+ type.
 
 \begin{table}[h!]
     \centering
@@ -391,11 +391,11 @@ The \lstinline{traversed_area} function returns a polygon representing the area 
 
 \lstinline{Centroid} is a variant of the \lstinline{ST_Centroid} PostGIS function, returning the evolution of the centroid of a temporal region. Since in our case the centroid is assumed to be the centre of rotation, it moves linearly between two defined instants, and a temporal point containing the position of the centroid of a temporal region can thus be easily computed and returned.
 
-Computing the translation or rotation speed of a polygon can also be of interest, but since the translation speed can be retrieved by applying the \lstinline{speed} function (defined for temporal points) on the centroid of the moving region, only the rotation speed has to be handled. This is thus returned by the \lstinline{rotation_speed} function, which returns a temporal float. Since we assume linear interpolation between instants, the rotation speed is assumed to be constants between to instants.
+Computing the translation or rotation speed of a polygon can also be of interest, but since the translation speed can be retrieved by applying the \lstinline{speed} function (defined for temporal points) on the centroid of the moving region, only the rotation speed has to be handled. This is thus returned by the \lstinline{rotation_speed} function, which returns a temporal float. Since we assume linear interpolation between instants, the rotation speed is assumed to be constants between two instants.
 
-The four last functions return respectively the smallest distance possible between the two (temporal) regions, the instant from the first temporal region at which this distance was attained, a segment going from the first region to the second at their closest instant, and finally a temporal float representing the evolution of the distance between the two regions during their movement. 
+The last four functions return respectively the smallest distance possible between the two (temporal) regions, the instant from the first temporal region at which this distance was attained, a segment going from the first region to the second at their closest instant, and finally a temporal float representing the evolution of the distance between the two regions during their movement. 
 
-The three first functions can be implemented easily if the \lstinline{distance} function exists. Indeed, if we have a \lstinline+tfloat+ value representing the result of the distance function applied to two (moving) regions, we can use already defined functions on the \lstinline+tfloat+ type to find the minimum value, or the instant at which this minimum value is obtained, which solves the first two problems. After computing the position of both regions when they were at their closest, we can then also use a PostGIS spatial function to compute the smallest line joining these polygons, which is the result of the third question.
+The first three functions can be implemented easily if the \lstinline{distance} function exists. Indeed, if we have a \lstinline+tfloat+ value representing the result of the distance function applied to two (moving) regions, we can use already defined functions on the \lstinline+tfloat+ type to find the minimum value, or the instant at which this minimum value is obtained, which solves the first two problems. After computing the position of both regions when they were at their closest, we can then also use a PostGIS spatial function to compute the smallest line joining these polygons, which is the result of the third question.
 
 This leaves us with the implementation of the \lstinline{distance} function, which, due to its complexity and time constraints, is left as future work.
 
@@ -420,15 +420,15 @@ Some bounding box operators are also exposed to the user. These operators are po
     \hline
     \lstinline+expandTemporal+      & & \lstinline+tgeometry+ $\times$ \lstinline+interval+ $\rightarrow$ \lstinline+stbox+ \\
     \hline
-    \lstinline+contains_bbox+      & \lstinline+@>+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+stbox+ \\
+    \lstinline+contains_bbox+      & \lstinline+@>+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+bool+ \\
     \hline
-    \lstinline+contained_bbox+     & \lstinline+<@+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+stbox+ \\
+    \lstinline+contained_bbox+     & \lstinline+<@+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+bool+ \\
     \hline
-    \lstinline+overlaps_bbox+      & \lstinline+\&\&+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+stbox+ \\
+    \lstinline+overlaps_bbox+      & \lstinline+\&\&+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+bool+ \\
     \hline
-    \lstinline+same_bbox+          & \lstinline+$\sim$=+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+stbox+ \\
+    \lstinline+same_bbox+          & \lstinline+$\sim$=+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+bool+ \\
     \hline
-    \lstinline+adjacent_bbox+      & \lstinline+-$\mid$-+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+stbox+ \\
+    \lstinline+adjacent_bbox+      & \lstinline+-$\mid$-+ & \lstinline+\{tgeometry, geometry, stbox\}+ $\times$ \lstinline+\{tgeometry, geometry, stbox\}+ $\rightarrow$ \lstinline+bool+ \\
     \hline
     \end{tabularx}
     \caption{Bounding box functions and operators}

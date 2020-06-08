@@ -3,7 +3,7 @@
 \section{PostgreSQL}
 \label{section:postgresql}
 
-PostgreSQL \cite{postgresql} is an open-source object-relational database management [ORDBMS] system based on Postgres and was developed at the \textit{University of California at  Berkeley Computer Science Department} in 1996.
+PostgreSQL \cite{postgresql} is an open-source object-relational database management system [ORDBMS] based on Postgres and was developed at the \textit{University of California at  Berkeley Computer Science Department} in 1996.
 
 The name of the system reflects its support for most SQL standards, but the system also offers many advanced features, such as complex queries, foreign keys, triggers, multi-version concurrency control and more. 
 
@@ -14,7 +14,7 @@ PostgreSQL is also highly extensible, which allows users to define new data type
 
 PostGIS \cite{postgis}, released in 2001, is one example of an extension to the PostgreSQL DBMS. PostGIS is an open-source spatial extension to PostgreSQL that adds support for a wide range of geographic objects. 
 
-This extension allows \textit{Geographical Information System} [GIS] objects, such as points, linestring or polygons, to be stored in the database. It also includes support for processing and analyzing GIS objects, by defining functions and operations that can be used to process them, such as distance and area functions.
+This extension allows \textit{Geographical Information System} [GIS] objects, such as points, linestring or polygons, to be stored in the database. It also includes support for the processing and analyzing of GIS objects, by defining functions and operations that can be used to process them, such as distance and area functions.
 
 A PostGIS type that will be used a lot in this thesis is the \textit{polygon} type since this will be used to represent a static region. 
 
@@ -44,7 +44,7 @@ is a list of points representing a continuous line composed of multiple segments
   \caption{}
   \label{fig:linestring_closed}
 \end{subfigure}
-\caption{Examples of valid (a, c) and invalid (b) PostGIS linestrings}
+\caption[Examples of valid and invalid PostGIS linestrings]{Examples of valid (a, c) and invalid (b) PostGIS linestrings}
 \label{fig:postgis_linestring}
 \end{figure}
 
@@ -70,7 +70,7 @@ A PostGIS polygon is valid if no two of its rings intersect (Figure \ref{fig:pol
   \caption{}
   \label{fig:polygon_spike}
 \end{subfigure}
-\caption{Examples of valid (a, b) and invalid (c) PostGIS polygons}
+\caption[Examples of valid and invalid PostGIS polygons]{Examples of valid (a, b) and invalid (c) PostGIS polygons}
 \label{fig:postgis_polygon}
 \end{figure}
 
@@ -123,7 +123,7 @@ The value of this object is thus defined only at the given timestamps, and no as
 \subsubsection{Temporal Sequence}
 \label{section:mobilitydb_seq}
 
-A temporal sequence is defined just as a temporal instant set, except that the values for intermediate timestamps can be obtained by interpolation. The value of the temporal object is thus assumed to be defined over the whole period of the sequence.
+A temporal sequence is defined just as a temporal instant set, except that the values for intermediate timestamps can be obtained using interpolation. The value of the temporal object is thus assumed to be defined over the whole period of the sequence.
 
 Depending on the base type of the object, two interpolation methods are possible, stepwise/discrete or linear/continuous. The base types bool, text, and integer are forced to use a discrete interpolation method, whereas the base types float, geometry and geography can use either one depending on the use case.
 
@@ -170,7 +170,7 @@ These bounding boxed are used instead of the temporal object itself in some oper
 \subsection{Functions and Operators for Temporal Types}
 \label{section:mobilitydb_functions}
 
-MobilityDB exposes a large set of functions and operators for temporal types. These functions and operators are polymorphic, meaning they can have arguments of several types and the result type may vary depending on the input types, and they can be grouped into the categories described below. 
+MobilityDB exposes a large set of functions and operators for temporal types. These functions and operators are polymorphic, meaning they can have arguments of several types and the result type may vary depending on the input types. They can be grouped into the categories described below. 
 
 Note that this list is only there to introduce the set of functions exposed by MobilityDB, and does not consist of an exhaustive list of all available functions. For a more complete and detailed list, refer to the MobilityDB manual \cite{mobiliydb_manual}.
 
@@ -284,15 +284,15 @@ SELECT tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]' && 2);
 
     \item Distance Operators
 
-        These operators compute the distance between two temporal points as a \lstinline{tfloat} ('\lstinline+<->+)') or the smallest distance between two temporal points as a float ('\lstinline+|=|+'). Since the real distance function is the square root of a quadratic function, but MobilityDB assumes linear interpolation between instants, the distance operator in MobilityDB returns a linear approximation of the real distance between its arguments.
+        These operators compute the distance between two temporal points as a \lstinline{tfloat} ('\lstinline+<->+') or the smallest distance between two temporal points as a float ('\lstinline+|=|+'). Since the real distance function is the square root of a quadratic function, but MobilityDB assumes linear interpolation between instants, the distance operator in MobilityDB returns a linear approximation of the real distance between its arguments.
 
     \item Spatial Relationships for Temporal Points
 
-        The PostGIS spatial relationships functions (such as \lstinline{ST_Intersects} and \lstinline{ST_Relate}) are generalized in two different ways. In the first version, the PostGIS functions are applied to the union of all values taken by a temporal point (for example, \lstinline{intersects} and \lstinline{relate}). The second version is defined with temporal semantics and returns a temporal value. For the two example functions, the second version is \lstinline{tintersects} and \lstinline{trelate}, which return a \lstinline{tbool} and a \lstinline{ttext} respectively.
+        The PostGIS spatial relationship functions (such as \lstinline{ST_Intersects} and \lstinline{ST_Relate}) are generalized in two different ways. In the first version, the PostGIS functions are applied to the union of all values taken by a temporal point (for example, \lstinline{intersects} and \lstinline{relate}). The second version is defined with temporal semantics and returns a temporal value. For the two example functions, the second versions are \lstinline{tintersects} and \lstinline{trelate}, which return a \lstinline{tbool} and a \lstinline{ttext} respectively.
 
     \item Aggregate Functions for Temporal Types
 
-        These are the generalization of the usual aggregation functions, such as \lstinline{tcount}, \lstinline{tmax}, etc. The generalized form is defined with temporal semantics and return a temporal value.
+        These are the generalization of the usual aggregation functions, such as \lstinline{tcount}, \lstinline{tmax}, etc. The generalized form is defined with temporal semantics and returns a temporal value.
 
 \end{itemize}
 
@@ -300,4 +300,4 @@ SELECT tint '[1@2001-01-01, 2@2001-01-02, 1@2001-01-03]' && 2);
 \label{section:mobilitydb_notations}
 
 When talking specifically about a temporal type of instant duration, we will add a suffix \lstinline{inst} to the name of the type. For example, a temporal float of instant duration will be denoted \lstinline{tfloatinst}. 
-Similarly, for temporal instants of instant set, sequence and sequence set duration, we will add respectively the suffix \lstinline{i}, \lstinline{seq} and \lstinline{s}. For the base type float, this will thus become \lstinline{tfloati}, \lstinline{tfloatseq} and \lstinline{tfloats}.
+Similarly, for temporal values of instant set, sequence and sequence set duration, we will add respectively the suffix \lstinline{i}, \lstinline{seq} and \lstinline{s}. For the base type float, this will thus become \lstinline{tfloati}, \lstinline{tfloatseq} and \lstinline{tfloats}.

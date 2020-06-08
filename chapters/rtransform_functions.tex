@@ -5,7 +5,7 @@
 
 Before diving into the implementation of the general MoblityDB functions that have to be adapted to handle moving regions as well as all the types already present, we will first talk about a set of functions specific to the \lstinline{tgeometry} and \lstinline{rtransform} types.
 
-These functions can be called utility functions, since they are not presented to the user as an SQL function, but they are used in the backend a lot to simplify other functions. Table \ref{table:rtransform_functions} shows a list of these functions with their signature (input and output types).
+These functions are called utility functions, since they are not presented to the user as an SQL function but they are used in the backend a lot to simplify other functions. Table \ref{table:rtransform_functions} shows a list of these functions with their signature (input and output types).
 
 \begin{table}[h!]
     \centering
@@ -117,7 +117,7 @@ When we also need to verify that both input polygons have the same shape, we can
 \subsection{Apply}
 \label{section:apply}
 
-This \lstinline{apply} function does the opposite of the \lstinline{compute} function. Given an \lstinline{rtransform} and a start polygon, it applies the transformation to retrieve the end polygon. This is done using a PostGIS function called \lstinline{ST_Affine}, which applies an affine transformation to the given geometry. 
+The \lstinline{apply} function does the opposite of the \lstinline{compute} function. Given an \lstinline{rtransform} and a start polygon, it applies the transformation to retrieve the end polygon. This is done using a PostGIS function called \lstinline{ST_Affine}, which applies an affine transformation to the given geometry. 
 
 Applying an affine transformation again means rotating around the origin, so we first have to translate the polygon to have its centroid at the origin, then we can apply the given transformation, and finally, we apply the inverse of the first translation to get the final polygon.
 
@@ -126,7 +126,7 @@ Applying an affine transformation again means rotating around the origin, so we 
 
 This function is used when we have a polygon defined at time $t_1$ and another one defined at time $t_2$, and we want to retrieve the position of the polygon at time $t$, where $t_1 < t < t_2$ using linear interpolation. Of course, when using stepwise interpolation this function is not needed, since if we are looking for the polygon at time $t$, where $t_1 < t < t_2$, the needed polygon is simply the one defined at time $t_1$.
 
-If we wanted to interpolate two polygons using linear interpolation between their vertices, we would not keep the fixed-shape aspect of the polygon, as is in Figure \ref{fig:vertices_interpolation}. For this reason, the interpolation is done on the \lstinline{rtransforms} defining the position of the polygon at times $t_1$ and $t_2$ with respect to a certain reference polygon.
+If we wanted to interpolate two polygons using linear interpolation between their vertices, we would not keep the fixed-shape aspect of the polygon, as is shown in Figure \ref{fig:vertices_interpolation}. For this reason, the interpolation is done on the \lstinline{rtransforms} defining the position of the polygon at times $t_1$ and $t_2$ with respect to a certain reference polygon.
 
 For example, using a \lstinline{tgeometryseq} with three instants defined at times $t_0$, $t_1$ and $t_2$
 
@@ -150,7 +150,7 @@ Since we assume linear interpolation between the \lstinline{rtransform} values, 
     \end{cases}
 \]
 
-The interpolation of the angle of rotation, on the other hand, is slightly more complicated. We are still interpolating linearly, but we have to take into account that the angles $-\pi$ and $\pi$ correspond to the same rotation. This means that there are always two possibilities for the interpolation. Either go directly from $\theta_1$ to $\theta_2$ or go from $\theta_1$ to $-\pi$ (if $\theta_1 < \theta_2$) and then from $\pi$ to $\theta_2$. Both are valid interpolations, but one is shorter than the other. The shorter option is the option that will be taken for the interpolation of the angles.
+The interpolation of the angle of rotation, on the other hand, is slightly more complicated. We are still interpolating linearly, but we have to take into account the fact that the angles $-\pi$ and $\pi$ correspond to the same rotation. This means that there are always two possibilities for the interpolation. Either go directly from $\theta_1$ to $\theta_2$ or go from $\theta_1$ to $-\pi$ (if $\theta_1 < \theta_2$) and then from $\pi$ to $\theta_2$. Both are valid interpolations, but one is shorter than the other. The shorter option is the option that will be taken for the interpolation of the angles.
 
 \begin{figure}[h!]
 \centering
@@ -191,7 +191,7 @@ The interpolation of the angle of rotation, on the other hand, is slightly more 
 \label{fig:linear_axis}
 \end{figure}
 
-Any angle of rotation of $-\pi < \theta \le \pi$ can be represented by a point on the unit circle at $(\cos(\theta),\ \sin(\theta))$, which means that going from one angle to the other during the interpolation is the same as moving from one point to the other along the arc of the unit circle. The two possible ways of interpolating angles are thus represented by the two arcs connecting the points, one being longer than the other.
+Any angle of rotation $-\pi < \theta \le \pi$ can be represented by a point on the unit circle at $(\cos(\theta),\ \sin(\theta))$, which means that going from one angle to the other during the interpolation is the same as moving from one point to the other along the arc of the unit circle. The two possible ways of interpolating angles are thus represented by the two arcs connecting the points, one being longer than the other.
 
 \begin{figure}[h!]
 \centering
@@ -364,7 +364,7 @@ This function is used when we need to change the start/reference region of the \
 \subsection{Difference}
 \label{section:diff}
 
-The \lstinline{diff} function is similar to the compute function, except that it does the difference between the first and the second input argument, instead of doing an addition.
+The \lstinline{diff} function is similar to the \lstinline+compute+ function, except that it does the difference between the first and the second input argument, instead of doing an addition.
 
 \begin{align*}
         & v^x = v_2^x - v_1^x \\
@@ -377,6 +377,6 @@ The \lstinline{diff} function is similar to the compute function, except that it
         \end{cases}
 \end{align*}
 
-When we want to know what the transformation is between two instants, when both instants are saved as \lstinline{rtransforms} relative to a third instant, we can use simply do the difference between the \lstinline{rtransform} of the final instant and that of the initial instant to get the result.
+When we want to know what the transformation is between two instants when both instants are saved as \lstinline{rtransforms} relative to a third instant, we can use simply do the difference between the \lstinline{rtransform} of the final instant and that of the initial instant to get the result.
 
 For example, if we have a \lstinline{tgeometryi} with 3 instants $'\{\mathcal{R}_0@t_0,\ \mathcal{T}_1@t_1,\ \mathcal{T}_2@t_2\}'$, and we want to get the transformation to go from the second instant to the third, we can apply \lstinline{diff}$(\mathcal{T}_2,\ \mathcal{T}_1)$.

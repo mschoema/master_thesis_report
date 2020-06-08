@@ -3,11 +3,11 @@
 \section{Choice of Moving Region Type}
 \label{section:region_type_choice}
 
-The previous section describes two different approaches to handle moving regions, each using different assumption, and each having good and bad aspects. Implementing both is not a reasonable goal for this Master thesis, and a decision had to be made to decide which type of moving region to focus on.
+The previous section describes two different approaches to handle moving regions, each using different assumptions, and each having good and bad aspects. Implementing both is not a reasonable goal for this Master thesis, and a decision had to be made to decide which type of moving region to focus on.
 
 The choice was made to focus on implementing a model for manipulating moving regions of fixed-shape, based on the model presented in \cite{fmregion} and described previously. This decision was mostly arbitrary, based on personal preference, but not only. 
 
-MobilityDB already has an underlying structure for the new data types, and this structure has to be preserved as much as possible when implementing a new feature, and this was also a factor in the final decision. The deforming region model uses a \textit{sliced representation} of the movement, whereas MobilityDB uses a \textit{sequence representation} described in \cite{mobilitydb}, so the model would have to be heavily adapted to conform to the MobilityDB structure. Using a sequence representation for storing fixed-shape moving regions seems much more straight forward.
+MobilityDB already has an underlying structure for the new data types and this structure has to be preserved as much as possible when implementing a new feature, and this was also a factor in the final decision. The deforming region model uses a \textit{sliced representation} of the movement, whereas MobilityDB uses a \textit{sequence representation} described in \cite{mobilitydb}, so the model would have to be heavily adapted to conform to the MobilityDB structure. Using a sequence representation for storing fixed-shape moving regions seems much more straight forward.
 
 For the rest of the thesis, we can thus assume that we are always talking about regions of fixed-shape, except if explicitly mentioned that we talk about deforming regions.
 
@@ -19,28 +19,28 @@ Now that the choice of the type of region is done, the next challenge is finding
 \subsection{Type \texttt{tgeometryinst}}
 \label{section:internal_repr_inst}
 
-A moving region of instant duration is a static region, with an associated timestamp. As said in Section \ref{section:postgis}, the PostGIS type \lstinline{Geometry(Polygon)} will be used to describe a static region. A \lstinline{tgeometryinst} can thus be represented similarly to any other temporal type of instant duration, that is: as a pair of value and timestamp
+A moving region of instant duration is a static region with an associated timestamp. As said in Section \ref{section:postgis}, the PostGIS type \lstinline{Geometry(Polygon)} will be used to describe a static region. A \lstinline{tgeometryinst} can thus be represented similarly to any other temporal type of instant duration, that is: as a pair of value and timestamp
 
 \[
-    'v@t', 
+    '\mathcal{R}@t', 
 \]
-where the value is a PostGIS polygon object, and t is the timestamp. Since only one instant is present, there is no redundancy, and this is the most efficient way to store this type.
+where the \(\mathcal{R}\) is a PostGIS polygon object, and \(t\) is the timestamp. Since only one instant is present, there is no redundancy, and this is the most efficient way to store this type.
 
 \subsection{Type \texttt{tgeometryi}}
 \label{section:internal_repr_i}
 
-As described in Section \ref{section:mobilitydb_i}, a temporal value of instant set duration is simply a set of distinct timestamps stored in increasing order of their timestamp. In this case, an additional requirement on the values is present, namely the fact that all regions must be of the same shape.
+As described in Section \ref{section:mobilitydb_i}, a temporal value of instant set duration is simply a set of distinct instants stored in increasing order of their timestamp. In this case, an additional requirement on the values is present, namely the fact that all regions must be of the same shape.
 
-A simple and naive representation for a \lstinline{tgeometryi} is then to store all instants in the set using the previous representation. That is, store for each instant a pair of polygon and timestamp. However, since we have added the extra requirement on the polygons, namely that their shape has to be the same, we are introducing a lot of redundancy in this representation, and the storage is thus not very efficient. \\
+A simple and naive representation for a \lstinline{tgeometryi} is then to store all instants in the set using the previous representation. That is, store for each instant a pair of polygon and timestamp. However, since we have added the extra requirement on the polygons, namely that their shapes have to be the same, we are introducing a lot of redundancy in this representation, and the storage is thus not very efficient. \\
 
-Suppose that all the previously mentioned requirements are met, we can store the \lstinline{tgeometryi}  more efficiently, by storing the polygon only once and storing the subsequent instants using only the transformation with respect to the initial instant. 
+If we suppose that all the previously mentioned requirements are met, we can store the \lstinline{tgeometryi}  more efficiently by storing the polygon only once and storing the subsequent instants using only the transformation with respect to the initial instant. 
 
 Using this representation, a \lstinline{tgeometryi} with $n$ instants is written as
 
 \[
     '\{\mathcal{R}_0@t_0,\ \mathcal{T}_1@t_1,\ \mathcal{T}_2@t_2,\ ..., \ \mathcal{T}_{n-1}@t_{n-1}\}', 
 \]
-where $\mathcal{R}_0$ is the initial region, and $\mathcal{T}_i$ are the transformation units. \\
+where $\mathcal{R}_0$ is the initial region, and $\mathcal{T}_i$ are the transformation units.
 
 Section \ref{section:fixed_shape_regions} describes a possible transformation unit representing a transformation from a start to an end instant. In our case, only the end instant has to be stored, since the start instant will always be represented by the reference region $\mathcal{R}_0$ at time $t_{0}$. Since the start and end timestamp are also already stored elsewhere, namely in the timestamps $t_0$ and $t_i$, we only need to store the rotation centre $C$, the translation vector $(v^x,\ v^y)$ and the rotation angle $\theta$ in the transformation unit.
 
@@ -48,7 +48,7 @@ Section \ref{section:fixed_shape_regions} describes a possible transformation un
     \mathcal{T}_i: (C_i, v_i^x, v_i^y, \theta_i)
 \]
 
-If we want to compute the transformation unit starting from the initial and final polygons, we need to also define a rotation centre for all the other parameters to be uniquely defined. For example, if we look at the start and end polygon (dark blue) shown in Figure \ref{fig:center_of_rotation}, multiple transformation units can be defined, all having the same initial and final position, but they differ in their rotation centre and the path they take. The blue path has a fixed rotation centre at $(3.5,\ 1)$, and there is no translation involved, while the red path uses the centroid of the polygon as the rotation centre, and involves a translation by 5 units along the x-axis.
+If we want to compute the transformation unit starting from the initial and final polygons, we need to define a rotation centre for all the other parameters to be uniquely defined. For example, if we look at the start and end polygon (dark blue) shown in Figure \ref{fig:center_of_rotation}, multiple transformation units can be defined, all having the same initial and final position, but they differ in their rotation centre and the path they take. The blue path has a fixed rotation centre at $(3.5,\ 1)$, and there is no translation involved, while the red path uses the centroid of the polygon as the rotation centre, and involves a translation by 5 units along the x-axis.
 
 \begin{figure}[h!]
     \centering
@@ -175,5 +175,5 @@ In three of the last four types, a transformation unit was used to represent an 
 
 Since we know that rotating by $\theta$ or rotating by $\theta + 2\pi$ gives the same final result, we will add a constraint on the rotation angle stored in an \lstinline{rtransform} object: $-\pi < \theta \le \pi$. This constraint allows us to compute a unique transformation unit when starting from an initial and final polygon. \\
 
-An \lstinline{rtransform} like this always has to be related to a polygon object, usually the polygon stored in the value of the first instant of the sequence, which will be the initial polygon. We can then apply the \lstinline{rtransform} as explained in \ref{section:apply} to the start polygon, to retrieve the final polygon. Retrieving the polygon at an instant that is in between two stored instants, will require us to interpolate between two saved transformations to retrieve the final polygon. This interpolation method is explained in Section \ref{section:interpolate}.
+An \lstinline{rtransform} like this always has to be related to a polygon object, usually the polygon stored in the value of the first instant of the sequence, which will be the initial polygon. We can then apply the \lstinline{rtransform} as explained in \ref{section:apply} to the start polygon, to retrieve the final polygon. Retrieving the polygon at an instant that is in between two stored instants will require us to interpolate between two saved transformations to retrieve the final polygon. This interpolation method is explained in Section \ref{section:interpolate}.
 

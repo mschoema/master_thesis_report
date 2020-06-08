@@ -24,7 +24,7 @@ Quaternions were first described by William Rowan Hamilton in 1843 and are an ex
     q = a + bi + cj + dk, \; \text{with } a, b, c, d \in \mathbb{R} \\
 \end{equation}
 
-The symbols \( i, j \) and \( k \) can be interpreted as unit vectors in a three-dimensional space, and are analogous to the symbol i in complex numbers. Multiplication of complex numbers uses the fact that \( i^2 = -1 \). Similarly, quaternion multiplication is defined using the multiplication rules of \( i, j \) and \( k \) with each other.
+The symbols \( i, j \) and \( k \) can be interpreted as unit vectors in a three-dimensional space, and are analogous to the symbol \( i \) in complex numbers. Multiplication of complex numbers uses the fact that \( i^2 = -1 \). Similarly, quaternion multiplication is defined using the multiplication rules of \( i, j \) and \( k \) with each other.
 
 \begin{equation}
     i^2 = j^2 = k^2 = ijk = -1 \\
@@ -52,7 +52,7 @@ Unit quaternions can be used to efficiently represent orientations or rotations 
     q = \cos(\frac{\theta}{2}) + \frac{(xi + yj + zk)}{\sqrt{x^2 + y^2 + z^2}}*\sin(\frac{\theta}{2})
 \end{equation}
 
-Rotating a point/vector \( p = (p_x, p_y, pz_) = p_xi + p_yj + p_zk \) by \( \theta \) around \( \vec{v} = (x, y, z) \) involves evaluating the conjugation of \( p \) by \( q \) 
+Rotating a point/vector \( p = (p_x, p_y, p_z) = p_xi + p_yj + p_zk \) by \( \theta \) around \( \vec{v} = (x, y, z) \) involves evaluating the conjugation of \( p \) by \( q \) 
 
 \begin{equation}
     p' = q*p*q^{-1}, 

@@ -14,9 +14,9 @@ Deforming moving regions form a subset of the moving regions, and can be used in
 
 When the regions change in discrete time steps, the major issue is the storage space, but there are no real other challenges, since the region is well-defined at every instant (using stepwise interpolation), and the usual spatial functions can be easily generalized to moving regions.
 
-An example of a use case where a deforming moving region changes in discrete time steps is a cadastre. This type of moving regions is briefly discussed in Section \ref{section:deforming}. \\
+An example of a use case where a deforming moving region changes in discrete time steps is a cadastre. This type of moving region is briefly discussed in Section \ref{section:deforming}. \\
 
-When the regions are changing continuously, however, this stepwise interpolation method cannot be used anymore and a new interpolation method has to be defined. Next to this interpolation method, a storage model that allows to efficiently compute these interpolations has to be described as well. Since the start and end region might look very different, an additional difficulty arises when we want to construct the moving region from a set of snapshots. Indeed, the start and end regions can have a different number of vertices, and even a different number of faces if the region splits or merges.
+When the regions are changing continuously, however, this stepwise interpolation method cannot be used anymore and a new interpolation method has to be defined. Next to this interpolation method, a storage model that allows us to efficiently compute these interpolations has to be described as well. Since the start and end regions might look very different, an additional difficulty arises when we want to construct the moving region from a set of snapshots. Indeed, the start and end regions can have a different number of vertices, and even a different number of faces if the region splits or merges.
 
 The most common model used to represent a deforming moving region uses a \textit{sliced representation} \cite{algos_for_mod,model_structure_for_mod} (in the time axis) of the moving region, which defines a transformation from a start to an end region. There exist also ways of creating this sliced representation starting from snapshots of the moving region \cite{repr_from_obs}.
 
@@ -80,7 +80,7 @@ An fmregion is thus defined by a single classical region $\mathcal{R}$ and a set
     \textit{fmregion} : (\mathcal{R}, \mathcal{T}^{+})
 \]
 
-When computing the position of the region at a moment between the start and end instant of a transformation unit, the translation vector, and rotation angle are linearly interpolated, and then the transformation is applied to the initial region to retrieve the position of the region at the correct moment.
+When computing the position of the region at a moment between the start and end instant of a transformation unit, the translation vector and rotation angle are linearly interpolated, and then the transformation is applied to the initial region to retrieve the position of the region at the correct moment.
 
 Note that the previous definition allows the region to rotate around an arbitrary rotation centre for each transformation unit. This particularity allows the moving region to change rotation centre between two transformation units, which is useful to describe a larger amount of trajectories than if the rotation centre was fixed for all transformations. On the other hand, this also requires the user to input the rotation centre for each transformation, since this cannot be uniquely computed by just seeing the start and end position of the region.
 
@@ -89,7 +89,7 @@ The same paper \cite{fmregion} also describes a few useful algorithms to process
 \section{3D Moving Regions}
 \label{section:3d_regions_intro}
 
-The research articles presented in the two previous sections only focused on moving regions in two dimensions, but of course, we might wonder if 3D moving regions could also be manipulated similarly. Only 3D moving regions of fixed shape fixed-shape will be discussed here. To even just discuss 3D deforming moving regions would require a much larger amount of research.
+The research articles presented in the two previous sections only focused on moving regions in two dimensions, but of course we might wonder if 3D moving regions could also be manipulated similarly. Only 3D moving regions of fixed shape will be discussed here. To even just discuss 3D deforming moving regions would require a much larger amount of research.
 
 First of all, it is important to define what we call a 3D region. There is indeed a considerable difference between 3D polygons (polygons with points embedded in 3D space) and 3D polyhedra (3D volumetric objects). In the following, we will define a 3D region as a volumetric geometry, thus representable by a 3D polyhedron.
 
@@ -107,6 +107,6 @@ First, let's look at the case where the regions move in discrete time steps. In 
 
 If we assume fixed-shape regions, we can again use the fact that the only possible transformations are translations and rotations. It is thus sufficient to store the region once as a 3D polyhedron, and then store only the difference in position and orientation for all other positions. This technique is similar to the one described in the previous section, except that the translation and rotation are done in 3D space instead of 2D.
 
-Looking at continuously moving regions, we can apply the same storage idea, and retrieving the position of the region between two stored instants by computing a linear interpolation of the translation, just as was done in 3D, and computing a more advanced interpolation for the 3D rotation, based on \textit{quaternions}.
+Looking at continuously moving regions, we can apply the same storage idea, and retrieving the position of the region between two stored instants by computing a linear interpolation of the translation, just as was done in 2D, and by computing a more advanced interpolation for the 3D rotation, based on \textit{quaternions}.
 
 This interpolation method will be discussed in a later section (Section \ref{section:3d_regions}), but the important part is that it can be done. Storing 3D moving regions of fixed-shape is thus possible, and retrieving the region at any arbitrary instant is too. Implementation of functions that can manipulate and analyze these regions is another issue and is left as future research.
