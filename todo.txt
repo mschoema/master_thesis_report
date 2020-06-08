@@ -9,4 +9,4 @@ Ok - Write conclusion -> mix of summary and contributions
 Ok - Put gray background behind SQL in 'systems' section -> maybe not needed
 Ok - use \times instead of X in equations
 Ok - Use lstinline instead of italic for code elements + check use of italic
-- Write abstract
+Ok - Write abstract
