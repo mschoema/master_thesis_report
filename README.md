@@ -1,10 +1,11 @@
 ## Master Thesis:
 
-## Creating Representations for Complex Moving Geometries in Databases - Fixed-shape Moving Regions in MobilityDB
+## Creating Representations for Complex Moving Geometries in Databases
+### Fixed-shape Moving Regions in MobilityDB
 
-### Author: Maxime Schoemans
-### Supervisor: Esteban Zimanyi
-### Co-supervisor: Mahmoud Sakr
+#### Author: Maxime Schoemans
+#### Supervisor: Esteban Zimanyi
+#### Co-supervisor: Mahmoud Sakr
 
 ## Abstract
 
